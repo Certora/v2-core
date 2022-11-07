@@ -16,8 +16,10 @@
  **************************************************/
 // Declaration of contracts used in the spec
 
-// using Reserve as reserve
-
+// using DummyERC20Impl as dummyERC20Token
+// using DummyERC20A as tokenA
+// using DummyERC20B as tokenB
+//using WrappedNativeTokenMock as wrappedToken
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -25,8 +27,24 @@
 methods {
     // Harness method getters:
 
+    ////////////////////////////////////////
+	// ERC20 methods
+	transferFrom(address, address, uint256) => DISPATCHER(true)
+	transfer(address, uint256) => DISPATCHER(true)
+    balanceOf(address) => DISPATCHER(true)
+    approve(address, uint256) => DISPATCHER(true)
+	// //
+    // tokenA.balanceOf(address) envfree
+	// tokenB.balanceOf(address) envfree
+	// dummyERC20Token.balanceOf(address) envfree
+	// //
+    // tokenA.totalSupply() envfree
+	// tokenB.totalSupply() envfree
+	// dummyERC20Token.totalSupply() envfree
 
-    // Summarizing external functions:
+    ////////////////////////////////////////
+    // SwapConnectorMock methods
+    swap(address, address, uint256, uint256, bytes) => DISPATCHER(true)
 
 
 }

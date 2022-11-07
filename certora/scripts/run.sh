@@ -9,7 +9,15 @@ then
 fi
 
 certoraRun  certora/harness/SmartVaultHarness.sol \
+            packages/smart-vault/contracts/test/samples/WrappedNativeTokenMock.sol \
+            packages/smart-vault/contracts/test/core/PriceOracleMock.sol \
+            packages/smart-vault/contracts/test/core/SwapConnectorMock.sol \
+            packages/smart-vault/contracts/test/samples/DexMock.sol \
+            packages/smart-vault/contracts/test/core/StrategyMock.sol \
 --verify SmartVaultHarness:certora/specs/SmartVault.spec \
+--link  SmartVaultHarness:wrappedNativeToken=WrappedNativeTokenMock \
+        SmartVaultHarness:priceOracle=PriceOracleMock \
+        SmartVaultHarness:swapConnector=SwapConnectorMock \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
 --path . \
 --solc solc8.2 \
@@ -17,8 +25,12 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --optimistic_loop \
 $RULE  \
 --msg "mimic -$RULE $MSG" \
---cloud \
---debug
+--cloud #\
+#--debug
+
+            # certora/harness/DummyERC20Impl.sol \
+            # certora/harness/DummyERC20A.sol \
+            # certora/harness/DummyERC20B.sol \
 
 #--settings -mediumTimeout=600 \
 #--rule_sanity #\
