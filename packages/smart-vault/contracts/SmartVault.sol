@@ -334,7 +334,8 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         returns (address[] memory tokens, uint256[] memory amounts)
     {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
-        (tokens, amounts) = strategy.claim(data);
+        //(tokens, amounts) = strategy.claim(data);
+        (tokens, amounts) = IStrategy(strategy).claim(data);  // fixed line
         emit Claim(strategy, tokens, amounts, data);
     }
 
@@ -358,7 +359,8 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
 
         address token = IStrategy(strategy).token();
         uint256 initialAmount = IERC20(token).balanceOf(address(this));
-        uint256 value = strategy.join(amount, slippage, data);
+        //uint256 value = strategy.join(amount, slippage, data);
+        uint256 value = IStrategy(strategy).join(amount, slippage, data);  // fixed line
         uint256 finalAmount = IERC20(token).balanceOf(address(this));
 
         invested = initialAmount - finalAmount;
@@ -386,7 +388,8 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
 
         uint256 performanceFeeAmount;
-        (uint256 amount, uint256 exitValue) = strategy.exit(ratio, slippage, data);
+        //(uint256 amount, uint256 exitValue) = strategy.exit(ratio, slippage, data);
+        (uint256 amount, uint256 exitValue) = IStrategy(strategy).exit(ratio, slippage, data);  // fixed line
         // It can rely on the last updated value since we have just exited, no need to compute current value
         uint256 valueBeforeExit = lastValue(strategy) + exitValue;
         if (valueBeforeExit <= investedValue[strategy]) {

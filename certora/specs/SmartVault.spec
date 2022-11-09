@@ -20,6 +20,7 @@
 // using DummyERC20A as tokenA
 // using DummyERC20B as tokenB
 //using WrappedNativeTokenMock as wrappedToken
+using StrategyMock as strategyMock
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -33,6 +34,11 @@ methods {
 	transfer(address, uint256) => DISPATCHER(true)
     balanceOf(address) => DISPATCHER(true)
     approve(address, uint256) => DISPATCHER(true)
+
+    // packages/smart-vault/contracts/test/samples/TokenMock.sol
+    mint(address, uint256) => DISPATCHER(true)
+    burn(address, uint256) => DISPATCHER(true)
+
 	// //
     // tokenA.balanceOf(address) envfree
 	// tokenB.balanceOf(address) envfree
@@ -46,6 +52,36 @@ methods {
     // SwapConnectorMock methods
     swap(address, address, uint256, uint256, bytes) => DISPATCHER(true)
 
+    ////////////////////////////////////////
+    // node_modules/@openzeppelin/contracts/utils/Address.sol
+    //sendValue(address, uint256) => DISPATCHER(true) // not working well!
+    // !@#@!@#@ still getting call resolutions for swap(), exit(), withdraw()
+    sendValue(address, uint256) => HAVOC_ECF
+
+
+    ////////////////////////////////////////
+    // node_modules/@mimic-fi/v2-strategies/contracts/IStrategy.sol
+    // packages/strategies/contracts/IStrategy.sol
+    // using the mock at:
+    // packages/smart-vault/contracts/test/core/StrategyMock.sol
+    token() => DISPATCHER(true)
+    // valueRate() returns (uint256) => DISPATCHER(true)
+    lastValue(address) returns (uint256) => DISPATCHER(true)
+    claim(bytes) returns (address[], uint256[]) => DISPATCHER(true)
+    join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true)
+    // the StrategyMock dispatchers caused the tool to TIMEOUT because of
+    // incorrect calling in the SmartVault.sol
+    // fixed the original code by changing "strategy." to "IStrategy(strategy)."
+
+
+    ////////////////////////////////////////
+    // packages/registry/contracts/registry/IRegistry.sol
+    // using the implementation at:
+    // packages/registry/contracts/registry/Registry.sol
+    implementationOf(address) returns (address) => DISPATCHER(true)
+    implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
+    
 
 }
 
@@ -122,5 +158,6 @@ rule sanity(method f){
     env e;
     calldataarg args;
     f(e,args);
+    //join(e,args);
     assert false;
 }
