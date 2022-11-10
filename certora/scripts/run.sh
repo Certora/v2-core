@@ -9,6 +9,9 @@ then
 fi
 
 certoraRun  certora/harness/SmartVaultHarness.sol \
+            certora/harness/DummyERC20Impl.sol \
+            certora/harness/DummyERC20A.sol \
+            certora/harness/DummyERC20B.sol \
             certora/harness/DummyERC20FeeCollectorMock.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
             packages/smart-vault/contracts/test/samples/WrappedNativeTokenMock.sol \
@@ -27,16 +30,22 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --solc solc8.2 \
 --loop_iter 1 \
 --optimistic_loop \
+--settings -optimisticFallback=true \
+--settings -contractRecursionLimit=1 \
 $RULE  \
 --msg "mimic -$RULE $MSG" \
---settings -contractRecursionLimit=1 \
---cloud #\
+--disableLocalTypeChecking \
+--staging alex/remove-call-cvl-keyword
+
+# --staging alex/remove-call-cvl-keyword
+# --cloud #\
+#
+
 #--debug
 
-            # certora/harness/DummyERC20Impl.sol \
-            # certora/harness/DummyERC20A.sol \
-            # certora/harness/DummyERC20B.sol \
 
+#            node_modules/@openzeppelin/contracts/utils/Address.sol \
+#--settings -contractRecursionLimit=1 \
 #--settings -mediumTimeout=600 \
 #--rule_sanity #\
 #--debug

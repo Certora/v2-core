@@ -20,7 +20,7 @@
 // using DummyERC20A as tokenA
 // using DummyERC20B as tokenB
 //using WrappedNativeTokenMock as wrappedToken
-using StrategyMock as strategyMock
+//using StrategyMock as strategyMock
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -50,13 +50,32 @@ methods {
 
     ////////////////////////////////////////
     // SwapConnectorMock methods
-    swap(address, address, uint256, uint256, bytes) => DISPATCHER(true)
+    swap(uint8, address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    // swap(
+    //     ISwapConnector.Source, /* source */ //enum --> uint8
+    //     address tokenIn,
+    //     address tokenOut,
+    //     uint256 amountIn,
+    //     uint256 minAmountOut,
+    //     bytes memory data
+    // ) external override returns (uint256 amountOut) => DISPATCHER(true)
+    // swap(enum ISwapConnector.Source,address,address,uint256,uint256,bytes)
+
+    ////////////////////////////////////////
+    // DexMock methods
+    swap(address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
+    //     returns (uint256 amountOut)
 
     ////////////////////////////////////////
     // node_modules/@openzeppelin/contracts/utils/Address.sol
-    //sendValue(address, uint256) => DISPATCHER(true) // not working well!
+    //sendValue(address, uint256) => DISPATCHER(true) // not working well, probably because is internal!
     // !@#@!@#@ still getting call resolutions for swap(), exit(), withdraw()
-    sendValue(address, uint256) => HAVOC_ECF
+    //sendValue(address, uint256) => HAVOC_ECF
+    
+    ////////////////////////////////////////
+    // SmartVault.sol
+    call(address, bytes, uint256, bytes) returns (bytes) => HAVOC_ECF
 
 
     ////////////////////////////////////////
@@ -66,10 +85,12 @@ methods {
     // packages/smart-vault/contracts/test/core/StrategyMock.sol
     token() => DISPATCHER(true)
     // valueRate() returns (uint256) => DISPATCHER(true)
+    //lastValue(address) returns (uint256) => NONDET
     lastValue(address) returns (uint256) => DISPATCHER(true)
     claim(bytes) returns (address[], uint256[]) => DISPATCHER(true)
     join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
     exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true)
+
     // the StrategyMock dispatchers caused the tool to TIMEOUT because of
     // incorrect calling in the SmartVault.sol
     // fixed the original code by changing "strategy." to "IStrategy(strategy)."
@@ -154,10 +175,19 @@ methods {
 
 //  rules for info and checking the ghost and tool
 //  expecting to fail
-rule sanity(method f){
+rule sanity(method f)
+    // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector}
+    filtered {f->f.selector == exit(address,uint256,uint256,bytes).selector}
+    // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector ||
+    //             f.selector == withdraw(address,uint256,address,bytes).selector ||
+    //             f.selector == exit(address,uint256,uint256,bytes).selector ||
+    //             f.selector == call(address,bytes,uint256,bytes).selector ||
+    //             f.selector == unwrap(uint256,bytes).selector}
+{
     env e;
     calldataarg args;
     f(e,args);
     //join(e,args);
+    //swap(e,args);
     assert false;
 }

@@ -335,7 +335,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
     {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         //(tokens, amounts) = strategy.claim(data);
-        (tokens, amounts) = IStrategy(strategy).claim(data);  // fixed line
+        (tokens, amounts) = IStrategy(strategy).claim(data);  // manually added - fixed line
         emit Claim(strategy, tokens, amounts, data);
     }
 
@@ -360,7 +360,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         address token = IStrategy(strategy).token();
         uint256 initialAmount = IERC20(token).balanceOf(address(this));
         //uint256 value = strategy.join(amount, slippage, data);
-        uint256 value = IStrategy(strategy).join(amount, slippage, data);  // fixed line
+        uint256 value = IStrategy(strategy).join(amount, slippage, data);  // manually added - fixed line
         uint256 finalAmount = IERC20(token).balanceOf(address(this));
 
         invested = initialAmount - finalAmount;
@@ -389,7 +389,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
 
         uint256 performanceFeeAmount;
         //(uint256 amount, uint256 exitValue) = strategy.exit(ratio, slippage, data);
-        (uint256 amount, uint256 exitValue) = IStrategy(strategy).exit(ratio, slippage, data);  // fixed line
+        (uint256 amount, uint256 exitValue) = IStrategy(strategy).exit(ratio, slippage, data);  // manually added - fixed line
         // It can rely on the last updated value since we have just exited, no need to compute current value
         uint256 valueBeforeExit = lastValue(strategy) + exitValue;
         if (valueBeforeExit <= investedValue[strategy]) {
@@ -452,7 +452,8 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         }
 
         uint256 preBalanceOut = IERC20(tokenOut).balanceOf(address(this));
-        swapConnector.swap(source, tokenIn, tokenOut, amountIn, minAmountOut, data);
+        //swapConnector.swap(source, tokenIn, tokenOut, amountIn, minAmountOut, data);
+        ISwapConnector(swapConnector).swap(ISwapConnector.Source.UniswapV2, tokenIn, tokenOut, amountIn, minAmountOut, data);  // manually added - fixes vacuity in sanity
         uint256 postBalanceOut = IERC20(tokenOut).balanceOf(address(this));
         uint256 amountOutBeforeFees = postBalanceOut - preBalanceOut;
         require(amountOutBeforeFees >= minAmountOut, 'SWAP_MIN_AMOUNT');
