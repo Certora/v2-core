@@ -34,10 +34,10 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --settings -contractRecursionLimit=1 \
 $RULE  \
 --msg "mimic -$RULE $MSG" \
---disableLocalTypeChecking \
---staging alex/remove-call-cvl-keyword
+--staging #alex/remove-call-cvl-keyword
 
 # --staging alex/remove-call-cvl-keyword
+# --disableLocalTypeChecking \
 # --cloud #\
 #
 

@@ -19,8 +19,8 @@
 // using DummyERC20Impl as dummyERC20Token
 // using DummyERC20A as tokenA
 // using DummyERC20B as tokenB
-//using WrappedNativeTokenMock as wrappedToken
-//using StrategyMock as strategyMock
+// using WrappedNativeTokenMock as wrappedToken
+// using StrategyMock as strategyMock
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -50,6 +50,7 @@ methods {
 
     ////////////////////////////////////////
     // SwapConnectorMock methods
+    // packages/smart-vault/contracts/test/core/SwapConnectorMock.sol
     swap(uint8, address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
     // swap(
     //     ISwapConnector.Source, /* source */ //enum --> uint8
@@ -59,34 +60,41 @@ methods {
     //     uint256 minAmountOut,
     //     bytes memory data
     // ) external override returns (uint256 amountOut) => DISPATCHER(true)
-    // swap(enum ISwapConnector.Source,address,address,uint256,uint256,bytes)
 
     ////////////////////////////////////////
-    // DexMock methods
+    // DexMock methods (called by SwapConnectorMock)
+    // packages/smart-vault/contracts/test/samples/DexMock.sol
     swap(address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
     // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
     //     returns (uint256 amountOut)
 
     ////////////////////////////////////////
     // node_modules/@openzeppelin/contracts/utils/Address.sol
-    //sendValue(address, uint256) => DISPATCHER(true) // not working well, probably because is internal!
-    // !@#@!@#@ still getting call resolutions for swap(), exit(), withdraw()
-    //sendValue(address, uint256) => HAVOC_ECF
+    // sendValue(address, uint256) => DISPATCHER(true) // not working well, probably because is internal!
+    // getting call resolutions for swap(), exit(), withdraw()
+    // sendValue(address, uint256) => HAVOC_ECF
+    // RESOLVED using --settings -optimisticFallback=true \
     
     ////////////////////////////////////////
-    // SmartVault.sol
-    call(address, bytes, uint256, bytes) returns (bytes) => HAVOC_ECF
+    // SmartVault.sol = the main contract
+    // call(address, bytes, uint256, bytes) returns (bytes) => HAVOC_ECF
+    // ------------- WARNING! -------------
+    // call is considered a reserved keyword in CVL, meanwhile HOTFIX by Alex works partially:
+    // --staging alex/remove-call-cvl-keyword \
+    // --disableLocalTypeChecking
+    // we are getting the default: havoc all contracts except SmartVaultHarness
 
 
     ////////////////////////////////////////
     // node_modules/@mimic-fi/v2-strategies/contracts/IStrategy.sol
     // packages/strategies/contracts/IStrategy.sol
-    // using the mock at:
+    // both files above were identical
+    // the interface is implemented by mock at:
     // packages/smart-vault/contracts/test/core/StrategyMock.sol
     token() => DISPATCHER(true)
     // valueRate() returns (uint256) => DISPATCHER(true)
-    //lastValue(address) returns (uint256) => NONDET
-    lastValue(address) returns (uint256) => DISPATCHER(true)
+    lastValue(address) returns (uint256) => NONDET
+    // lastValue(address) returns (uint256) => DISPATCHER(true) // causes error in rule sanity -> exit()
     claim(bytes) returns (address[], uint256[]) => DISPATCHER(true)
     join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
     exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true)
@@ -177,12 +185,13 @@ methods {
 //  expecting to fail
 rule sanity(method f)
     // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector}
-    filtered {f->f.selector == exit(address,uint256,uint256,bytes).selector}
+    // filtered {f->f.selector == exit(address,uint256,uint256,bytes).selector}
     // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector ||
     //             f.selector == withdraw(address,uint256,address,bytes).selector ||
     //             f.selector == exit(address,uint256,uint256,bytes).selector ||
     //             f.selector == call(address,bytes,uint256,bytes).selector ||
     //             f.selector == unwrap(uint256,bytes).selector}
+    // filtered {f->f.selector != claim(address,bytes).selector}
 {
     env e;
     calldataarg args;
