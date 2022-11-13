@@ -28,10 +28,11 @@ import '@mimic-fi/v2-strategies/contracts/IStrategy.sol';
 import '@mimic-fi/v2-swap-connector/contracts/ISwapConnector.sol';
 import '@mimic-fi/v2-registry/contracts/implementations/InitializableAuthorizedImplementation.sol';
 
-import './ISmartVault.sol';
-import './IWrappedNativeToken.sol';
-import './helpers/StrategyLib.sol';
-import './helpers/SwapConnectorLib.sol';
+//import './ISmartVault.sol';
+import '../../packages/smart-vault/contracts/ISmartVault.sol';
+import '../../packages/smart-vault/contracts/IWrappedNativeToken.sol';
+import '../../packages/smart-vault/contracts/helpers/StrategyLib.sol';
+import '../../packages/smart-vault/contracts/helpers/SwapConnectorLib.sol';
 
 /**
  * @title Smart Vault
