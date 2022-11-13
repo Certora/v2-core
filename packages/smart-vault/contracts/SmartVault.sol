@@ -334,8 +334,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         returns (address[] memory tokens, uint256[] memory amounts)
     {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
-        //(tokens, amounts) = strategy.claim(data);
-        (tokens, amounts) = IStrategy(strategy).claim(data);  // manually added - fixed line
+        (tokens, amounts) = strategy.claim(data);
         emit Claim(strategy, tokens, amounts, data);
     }
 
@@ -464,8 +463,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         }
 
         uint256 preBalanceOut = IERC20(tokenOut).balanceOf(address(this));
-        //swapConnector.swap(source, tokenIn, tokenOut, amountIn, minAmountOut, data);
-        ISwapConnector(swapConnector).swap(ISwapConnector.Source.UniswapV2, tokenIn, tokenOut, amountIn, minAmountOut, data);  // manually added - fixes vacuity in sanity
+        swapConnector.swap(source, tokenIn, tokenOut, amountIn, minAmountOut, data);
         uint256 postBalanceOut = IERC20(tokenOut).balanceOf(address(this));
         uint256 amountOutBeforeFees = postBalanceOut - preBalanceOut;
         require(amountOutBeforeFees >= minAmountOut, 'SWAP_MIN_AMOUNT');
