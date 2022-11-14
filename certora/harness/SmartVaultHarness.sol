@@ -21,4 +21,8 @@ contract SmartVaultHarness is SmartVault {
     //     return (fee.pct, fee.cap, fee.token, fee.period, fee.totalCharged, fee.nextResetTime);
     // }
 
+    function helperGetIsStrategyAllowed(address a) public view returns (bool res) {
+        return isStrategyAllowed[a];
+    }
+
 }

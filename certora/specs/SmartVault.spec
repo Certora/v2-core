@@ -327,3 +327,22 @@ rule whoChangedTheFeeCollector(method f)
 }
 
 
+rule whoChangedStrategyPermissions(method f)
+{
+    env e;
+    calldataarg args;
+
+    // isStrategyAllowed[address strategy0] should not change
+    address strategy0;
+    bool strategy0bool;
+    require strategy0bool == smartVaultContract.helperGetIsStrategyAllowed(e, strategy0);
+    
+    // call any function to try and modify feeCollector
+    f(e,args);
+
+    address strategy1;
+    bool strategy1bool;
+    require strategy1bool == smartVaultContract.helperGetIsStrategyAllowed(e, strategy1);
+
+    assert (strategy0 == strategy1) => (strategy0bool == strategy1bool);
+}
