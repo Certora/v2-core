@@ -9,4 +9,16 @@ import '../munged/SmartVault.sol';
 contract SmartVaultHarness is SmartVault {
     constructor(address _wrappedNativeToken, address _registry) SmartVault(_wrappedNativeToken, _registry) {}
 
+    // function helperGetFeeParams(Fee memory fee) public returns (uint256, uint256, address, uint256, uint256, uint256) {
+    //     /*struct Fee {
+    //         uint256 pct;
+    //         uint256 cap;
+    //         address token;
+    //         uint256 period;
+    //         uint256 totalCharged;
+    //         uint256 nextResetTime;
+    //     }*/
+    //     return (fee.pct, fee.cap, fee.token, fee.period, fee.totalCharged, fee.nextResetTime);
+    // }
+
 }
