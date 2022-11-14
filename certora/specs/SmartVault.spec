@@ -91,13 +91,17 @@ methods {
     // both files above were identical
     // the interface is implemented by mock at:
     // packages/smart-vault/contracts/test/core/StrategyMock.sol
-    token() => DISPATCHER(true)
+    // token() => DISPATCHER(true)
     // valueRate() returns (uint256) => DISPATCHER(true)
     lastValue(address) returns (uint256) => NONDET
     // lastValue(address) returns (uint256) => DISPATCHER(true) // causes error in rule sanity -> exit()
-    claim(bytes) returns (address[], uint256[]) => DISPATCHER(true)
-    join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
-    exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true)
+    // claim(bytes) returns (address[], uint256[]) => DISPATCHER(true) // works, but too slow
+    claim(bytes) returns (address[], uint256[]) => NONDET
+    // join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true) // old version
+    // join(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) => DISPATCHER(true) // causes error in rule sanity -> exit()
+    join(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) => NONDET 
+    // exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true) // old version
+    exit(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) => NONDET
 
     // the StrategyMock dispatchers caused the tool to TIMEOUT because of
     // incorrect calling in the SmartVault.sol
@@ -192,6 +196,7 @@ rule sanity(method f)
     //             f.selector == call(address,bytes,uint256,bytes).selector ||
     //             f.selector == unwrap(uint256,bytes).selector}
     // filtered {f->f.selector != claim(address,bytes).selector}
+    // filtered {f->f.selector != join(address,address[],uint256[],uint256,bytes).selector}
 {
     env e;
     calldataarg args;
