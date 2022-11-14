@@ -8,23 +8,24 @@ then
     MSG=": $2"
 fi
 
+#             certora/harness/DummyERC20Impl.sol \
+#             certora/harness/DummyERC20A.sol \
+#             certora/harness/DummyERC20B.sol \
+#             certora/harness/DummyERC20FeeCollectorMock.sol \
+#             packages/smart-vault/contracts/test/core/StrategyMock.sol \
+# --link      SmartVaultHarness:feeCollector=DummyERC20FeeCollectorMock \
+
 certoraRun  certora/harness/SmartVaultHarness.sol \
-            certora/harness/DummyERC20Impl.sol \
-            certora/harness/DummyERC20A.sol \
-            certora/harness/DummyERC20B.sol \
-            certora/harness/DummyERC20FeeCollectorMock.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
             packages/smart-vault/contracts/test/samples/WrappedNativeTokenMock.sol \
             packages/smart-vault/contracts/test/core/PriceOracleMock.sol \
             packages/smart-vault/contracts/test/core/SwapConnectorMock.sol \
             packages/smart-vault/contracts/test/samples/DexMock.sol \
-            packages/smart-vault/contracts/test/core/StrategyMock.sol \
             packages/registry/contracts/registry/Registry.sol \
 --verify SmartVaultHarness:certora/specs/SmartVault.spec \
 --link  SmartVaultHarness:wrappedNativeToken=WrappedNativeTokenMock \
         SmartVaultHarness:priceOracle=PriceOracleMock \
         SmartVaultHarness:swapConnector=SwapConnectorMock \
-        SmartVaultHarness:feeCollector=DummyERC20FeeCollectorMock \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
 --path . \
 --solc solc8.2 \
