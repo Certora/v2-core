@@ -336,7 +336,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
     {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         //(tokens, amounts) = strategy.claim(data);
-        (tokens, amounts) = IStrategy(strategy).claim(data);  // manually added - fixed line
+        (tokens, amounts) = IStrategy(strategy).claim(data);  // manually added IStrategy - fixed line
         emit Claim(strategy, tokens, amounts, data);
     }
 
@@ -362,7 +362,8 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
 
         uint256 value;
-        (tokensOut, amountsOut, value) = strategy.join(tokensIn, amountsIn, slippage, data);
+        // (tokensOut, amountsOut, value) = strategy.join(tokensIn, amountsIn, slippage, data);
+        (tokensOut, amountsOut, value) = IStrategy(strategy).join(tokensIn, amountsIn, slippage, data); // manually added IStrategy - fixed line
         require(tokensOut.length == amountsOut.length, 'JOIN_OUTPUT_INVALID_LENGTH');
 
         investedValue[strategy] = investedValue[strategy] + value;
@@ -392,7 +393,8 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         require(tokensIn.length == amountsIn.length, 'EXIT_INPUT_INVALID_LENGTH');
 
         uint256 value;
-        (tokensOut, amountsOut, value) = strategy.exit(tokensIn, amountsIn, slippage, data);
+        // (tokensOut, amountsOut, value) = strategy.exit(tokensIn, amountsIn, slippage, data);
+        (tokensOut, amountsOut, value) = IStrategy(strategy).exit(tokensIn, amountsIn, slippage, data); // manually added IStrategy - fixed line
         require(tokensOut.length == amountsOut.length, 'EXIT_OUTPUT_INVALID_LENGTH');
         uint256[] memory performanceFeeAmounts = new uint256[](amountsOut.length);
 
