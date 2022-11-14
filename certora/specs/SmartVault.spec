@@ -21,6 +21,7 @@
 // using DummyERC20B as tokenB
 // using WrappedNativeTokenMock as wrappedToken
 // using StrategyMock as strategyMock
+using SmartVaultHarness as smartVaultContract
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -186,7 +187,8 @@ methods {
  **************************************************/
 
 //  rules for info and checking the ghost and tool
-//  expecting to fail
+
+//  sanity check that all functions are reachable - expecting to fail
 rule sanity(method f)
     // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector}
     // filtered {f->f.selector == exit(address,uint256,uint256,bytes).selector}
@@ -201,7 +203,127 @@ rule sanity(method f)
     env e;
     calldataarg args;
     f(e,args);
-    //join(e,args);
-    //swap(e,args);
     assert false;
 }
+
+
+rule whoChangedWithdrawFeeSettings(method f)
+{
+    env e;
+    calldataarg args;
+
+    // withdrawFee parameters before
+    uint256 pct0; uint256 cap0; address token0; uint256 period0; uint256 totalCharged0; uint256 nextResetTime0;
+    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == smartVaultContract.withdrawFee(e);
+    
+    // call any function to try and modify withdrawFee
+    f(e,args);
+
+    // withdrawFee parameters after
+    uint256 pct1; uint256 cap1; address token1; uint256 period1; uint256 totalCharged1; uint256 nextResetTime1;
+    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == smartVaultContract.withdrawFee(e);
+
+    assert (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == (pct1, cap1, token1, period1, totalCharged1, nextResetTime1);
+}
+
+
+rule whoChangedPerformanceFeeSettings(method f)
+{
+    env e;
+    calldataarg args;
+
+    // performanceFee parameters before
+    uint256 pct0; uint256 cap0; address token0; uint256 period0; uint256 totalCharged0; uint256 nextResetTime0;
+    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == smartVaultContract.performanceFee(e);
+    
+    // call any function to try and modify performanceFee
+    f(e,args);
+
+    // performanceFee parameters after
+    uint256 pct1; uint256 cap1; address token1; uint256 period1; uint256 totalCharged1; uint256 nextResetTime1;
+    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == smartVaultContract.performanceFee(e);
+
+    assert (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == (pct1, cap1, token1, period1, totalCharged1, nextResetTime1);
+}
+
+
+rule whoChangedSwapFeeSettings(method f)
+{
+    env e;
+    calldataarg args;
+
+    // swapFee parameters before
+    uint256 pct0; uint256 cap0; address token0; uint256 period0; uint256 totalCharged0; uint256 nextResetTime0;
+    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == smartVaultContract.swapFee(e);
+    
+    // call any function to try and modify swapFee
+    f(e,args);
+
+    // swapFee parameters after
+    uint256 pct1; uint256 cap1; address token1; uint256 period1; uint256 totalCharged1; uint256 nextResetTime1;
+    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == smartVaultContract.swapFee(e);
+
+    assert (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == (pct1, cap1, token1, period1, totalCharged1, nextResetTime1);
+}
+
+
+rule whoChangedThePriceOracle(method f)
+{
+    env e;
+    calldataarg args;
+
+    // priceOracle address before
+    address priceOracle0;
+    require priceOracle0 == smartVaultContract.priceOracle(e);
+    
+    // call any function to try and modify priceOracle
+    f(e,args);
+
+    // priceOracle address after
+    address priceOracle1;
+    require priceOracle1 == smartVaultContract.priceOracle(e);
+
+    assert priceOracle0 == priceOracle1;
+}
+
+
+rule whoChangedTheSwapConnector(method f)
+{
+    env e;
+    calldataarg args;
+
+    // swapConnector address before
+    address swapConnector0;
+    require swapConnector0 == smartVaultContract.swapConnector(e);
+    
+    // call any function to try and modify swapConnector
+    f(e,args);
+
+    // swapConnector address after
+    address swapConnector1;
+    require swapConnector1 == smartVaultContract.swapConnector(e);
+
+    assert swapConnector0 == swapConnector1;
+}
+
+
+rule whoChangedTheFeeCollector(method f)
+{
+    env e;
+    calldataarg args;
+
+    // feeCollector address before
+    address feeCollector0;
+    require feeCollector0 == smartVaultContract.feeCollector(e);
+    
+    // call any function to try and modify feeCollector
+    f(e,args);
+
+    // feeCollector address after
+    address feeCollector1;
+    require feeCollector1 == smartVaultContract.feeCollector(e);
+
+    assert feeCollector0 == feeCollector1;
+}
+
+
