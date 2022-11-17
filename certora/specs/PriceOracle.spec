@@ -33,6 +33,10 @@ methods {
 
     //packages/price-oracle/contracts/feeds/IPriceFeedProvider.sol
     getPriceFeed(address, address) returns (address) => NONDET
+    // !!! IMPORTANT !!! possible vulnerability
+    // note that packages/price-oracle/contracts/feeds/PriceFeedProvider.sol
+    // is not protected: anyone knowing its address can use the PUBLIC setPriceFeed()
+    // to set any (malicious) feed provider he wishes
 
 }
 
