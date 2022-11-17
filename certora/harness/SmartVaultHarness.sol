@@ -25,4 +25,8 @@ contract SmartVaultHarness is SmartVault {
         return isStrategyAllowed[a];
     }
 
+    function helperGetInvestedValue(address a) public view returns (uint256 res) {
+        return investedValue[a];
+    }
+
 }

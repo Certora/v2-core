@@ -337,7 +337,7 @@ rule whoChangedStrategyPermissions(method f)
     bool strategy0bool;
     require strategy0bool == smartVaultContract.helperGetIsStrategyAllowed(e, strategy0);
     
-    // call any function to try and modify feeCollector
+    // call any function to try and modify isStrategyAllowed[strategy]
     f(e,args);
 
     address strategy1;
@@ -345,4 +345,25 @@ rule whoChangedStrategyPermissions(method f)
     require strategy1bool == smartVaultContract.helperGetIsStrategyAllowed(e, strategy1);
 
     assert (strategy0 == strategy1) => (strategy0bool == strategy1bool);
+}
+
+
+rule whoChangedInvestedValue(method f)
+{
+    env e;
+    calldataarg args;
+
+    // investedValue[address strategy0] should not change
+    address strategy0;
+    uint256 strategy0investedValue;
+    require strategy0investedValue == smartVaultContract.helperGetInvestedValue(e, strategy0);
+    
+    // call any function to try and modify investedValue[strategy]
+    f(e,args);
+
+    address strategy1;
+    uint256 strategy1investedValue;
+    require strategy1investedValue == smartVaultContract.helperGetInvestedValue(e, strategy1);
+
+    assert (strategy0 == strategy1) => (strategy0investedValue == strategy1investedValue);
 }
