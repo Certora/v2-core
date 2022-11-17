@@ -24,7 +24,15 @@
 methods {
     // Harness method getters:
 
-    
+
+    //node_modules/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
+    decimals() returns (uint8) => NONDET  // Also in AggregatorV3Interface
+
+    //node_modules/@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol
+    latestRoundData() returns (uint80, int256 answer, uint256, uint256, uint80) => NONDET
+
+    //packages/price-oracle/contracts/feeds/IPriceFeedProvider.sol
+    getPriceFeed(address, address) returns (address) => NONDET
 
 }
 
