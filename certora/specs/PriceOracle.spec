@@ -37,6 +37,8 @@ methods {
     // note that packages/price-oracle/contracts/feeds/PriceFeedProvider.sol
     // is not protected: anyone knowing its address can use the PUBLIC setPriceFeed()
     // to set any (malicious) feed provider he wishes
+    // probably it is protected! because SmartVault.sol uses 'auth' modifier
+    // for the same-name function (line 204)
 
 }
 
