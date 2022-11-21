@@ -13,10 +13,11 @@ certoraRun  certora/harness/PriceOracleHarness.sol \
 --packages @chainlink=node_modules/@chainlink @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
 --path . \
 --solc solc8.2 \
---loop_iter 1 \
+--loop_iter 2 \
 --optimistic_loop \
 --settings -optimisticFallback=true \
 --settings -contractRecursionLimit=1 \
 $RULE  \
 --msg "mimic PriceOracle -$RULE $MSG" \
+--send_only \
 --staging
