@@ -14,6 +14,7 @@ fi
 #             certora/harness/DummyERC20FeeCollectorMock.sol \
 #             packages/smart-vault/contracts/test/core/StrategyMock.sol \
 # --link      SmartVaultHarness:feeCollector=DummyERC20FeeCollectorMock \
+#             SmartVaultHarness:swapConnector=SwapConnectorMock \
 
 certoraRun  certora/harness/SmartVaultHarness.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
@@ -23,11 +24,12 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
             packages/smart-vault/contracts/test/samples/DexMock.sol \
             packages/smart-vault/contracts/test/core/StrategyMock.sol \
             packages/registry/contracts/registry/Registry.sol \
+            packages/swap-connector/contracts/SwapConnector.sol \
 --verify SmartVaultHarness:certora/specs/SmartVault.spec \
 --link  SmartVaultHarness:wrappedNativeToken=WrappedNativeTokenMock \
         SmartVaultHarness:priceOracle=PriceOracleMock \
-        SmartVaultHarness:swapConnector=SwapConnectorMock \
---packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
+        SmartVaultHarness:swapConnector=SwapConnector \
+--packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap \
 --path . \
 --solc solc8.2 \
 --loop_iter 2 \
