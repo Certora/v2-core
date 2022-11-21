@@ -31,8 +31,8 @@ import '@mimic-fi/v2-registry/contracts/implementations/InitializableAuthorizedI
 //import './ISmartVault.sol';
 import '../../packages/smart-vault/contracts/ISmartVault.sol';
 import '../../packages/smart-vault/contracts/IWrappedNativeToken.sol';
-import '../../packages/smart-vault/contracts/helpers/StrategyLib.sol';
-import '../../packages/smart-vault/contracts/helpers/SwapConnectorLib.sol';
+import './StrategyLib.sol';
+import './SwapConnectorLib.sol';
 
 /**
  * @title Smart Vault
@@ -335,8 +335,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         returns (address[] memory tokens, uint256[] memory amounts)
     {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
-        //(tokens, amounts) = strategy.claim(data);
-        (tokens, amounts) = IStrategy(strategy).claim(data);  // manually added IStrategy - fixed line
+        (tokens, amounts) = strategy.claim(data);
         emit Claim(strategy, tokens, amounts, data);
     }
 
@@ -362,8 +361,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
 
         uint256 value;
-        // (tokensOut, amountsOut, value) = strategy.join(tokensIn, amountsIn, slippage, data);
-        (tokensOut, amountsOut, value) = IStrategy(strategy).join(tokensIn, amountsIn, slippage, data); // manually added IStrategy - fixed line
+        (tokensOut, amountsOut, value) = strategy.join(tokensIn, amountsIn, slippage, data);
         require(tokensOut.length == amountsOut.length, 'JOIN_OUTPUT_INVALID_LENGTH');
 
         investedValue[strategy] = investedValue[strategy] + value;
@@ -393,8 +391,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         require(tokensIn.length == amountsIn.length, 'EXIT_INPUT_INVALID_LENGTH');
 
         uint256 value;
-        // (tokensOut, amountsOut, value) = strategy.exit(tokensIn, amountsIn, slippage, data);
-        (tokensOut, amountsOut, value) = IStrategy(strategy).exit(tokensIn, amountsIn, slippage, data); // manually added IStrategy - fixed line
+        (tokensOut, amountsOut, value) = strategy.exit(tokensIn, amountsIn, slippage, data);
         require(tokensOut.length == amountsOut.length, 'EXIT_OUTPUT_INVALID_LENGTH');
         uint256[] memory performanceFeeAmounts = new uint256[](amountsOut.length);
 
@@ -467,8 +464,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         }
 
         uint256 preBalanceOut = IERC20(tokenOut).balanceOf(address(this));
-        //swapConnector.swap(source, tokenIn, tokenOut, amountIn, minAmountOut, data);
-        ISwapConnector(swapConnector).swap(ISwapConnector.Source.UniswapV2, tokenIn, tokenOut, amountIn, minAmountOut, data);  // manually added - fixes vacuity in sanity
+        swapConnector.swap(source, tokenIn, tokenOut, amountIn, minAmountOut, data);
         uint256 postBalanceOut = IERC20(tokenOut).balanceOf(address(this));
         uint256 amountOutBeforeFees = postBalanceOut - preBalanceOut;
         require(amountOutBeforeFees >= minAmountOut, 'SWAP_MIN_AMOUNT');

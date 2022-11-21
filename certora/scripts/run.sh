@@ -21,6 +21,7 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
             packages/smart-vault/contracts/test/core/PriceOracleMock.sol \
             packages/smart-vault/contracts/test/core/SwapConnectorMock.sol \
             packages/smart-vault/contracts/test/samples/DexMock.sol \
+            packages/smart-vault/contracts/test/core/StrategyMock.sol \
             packages/registry/contracts/registry/Registry.sol \
 --verify SmartVaultHarness:certora/specs/SmartVault.spec \
 --link  SmartVaultHarness:wrappedNativeToken=WrappedNativeTokenMock \
@@ -29,12 +30,12 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
 --path . \
 --solc solc8.2 \
---loop_iter 1 \
+--loop_iter 2 \
 --optimistic_loop \
---settings -optimisticFallback=true \
---settings -contractRecursionLimit=1 \
-$RULE  \
+--rule sanity \
+--settings -contractRecursionLimit=1,-byteMapHashingPrecision=10 \
 --msg "mimic -$RULE $MSG" \
+--send_only \
 --staging #alex/remove-call-cvl-keyword
 
 # --staging alex/remove-call-cvl-keyword
