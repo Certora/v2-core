@@ -7,6 +7,12 @@ pragma solidity ^0.8.2;
 import '../munged/SmartVault.sol';
 
 contract SmartVaultHarness is SmartVault {
+
+    //bytes4(keccak256(bytes('setPriceFeed(address,address,address)')));
+    bytes4 public constant select_setPriceFeed = bytes4(0x67a1d5ab);
+    //bytes4(keccak256(bytes('collect(address,address,uint256,bytes)')));
+    bytes4 public constant select_collect = bytes4(0x5af547e6);
+    
     constructor(address _wrappedNativeToken, address _registry) SmartVault(_wrappedNativeToken, _registry) {}
 
     // function helperGetFeeParams(Fee memory fee) public returns (uint256, uint256, address, uint256, uint256, uint256) {
@@ -20,13 +26,4 @@ contract SmartVaultHarness is SmartVault {
     //     }*/
     //     return (fee.pct, fee.cap, fee.token, fee.period, fee.totalCharged, fee.nextResetTime);
     // }
-
-    function helperGetIsStrategyAllowed(address a) public view returns (bool res) {
-        return isStrategyAllowed[a];
-    }
-
-    function helperGetInvestedValue(address a) public view returns (uint256 res) {
-        return investedValue[a];
-    }
-
 }

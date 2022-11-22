@@ -114,11 +114,12 @@ methods {
     // packages/registry/contracts/registry/Registry.sol
     implementationOf(address) returns (address) => DISPATCHER(true)
     implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
-    
-
+    ANY_ADDRESS() returns (address) envfree
+    select_setPriceFeed() returns (bytes4) envfree
+    select_collect() returns (bytes4) envfree
+    isStrategyAllowed(address) returns (bool) envfree
+    investedValue(address) returns (uint256) envfree
 }
-
-
 
 /**************************************************
  *                  DEFINITIONS                   *
@@ -130,14 +131,36 @@ methods {
  *                GHOSTS AND HOOKS                *
  **************************************************/
 
+ghost mapping(address => mapping(bytes4 => bool)) ghostAuthorized {
+    init_state axiom forall address x. forall bytes4 y.
+        ghostAuthorized[x][y] == false;
+}
 
+hook Sstore authorized[KEY address who][KEY bytes4 what] bool value (bool old_value) STORAGE {
+    ghostAuthorized[who][what] = value; 
+}
 
+hook Sload bool value authorized[KEY address who][KEY bytes4 what] STORAGE {
+    require ghostAuthorized[who][what] == value; 
+} 
 
 /**************************************************
- *               CVL FUNCS & DEFS                 *
+ *               CVL FUNCS                        *
  **************************************************/
 
+// A helper function to set a unique authorized address (who)
+// for some specific function signature (what)
+function singleAddressAuthorization(address who, bytes4 what) {
+    require forall address user. (user != who => !ghostAuthorized[user][what]);
+    require !ghostAuthorized[ANY_ADDRESS()][what];
+}
 
+// A helper function to set a two unique authorized addresses (who1, who2)
+// for some specific function signature (what)
+function doubleAddressAuthorization(address who1, address who2, bytes4 what) {
+    require forall address user. ( (user != who1 && user != who2) => !ghostAuthorized[user][what]);
+    require !ghostAuthorized[ANY_ADDRESS()][what];
+}
 
 /**************************************************
  *                 VALID STATES                   *
@@ -145,7 +168,6 @@ methods {
 // Describe expressions over the system's variables
 // that should always hold.
 // Usually implemented via invariants 
-
 
 
 /**************************************************
@@ -334,14 +356,14 @@ rule whoChangedStrategyPermissions(method f)
     // isStrategyAllowed[address strategy0] should not change
     address strategy0;
     bool strategy0bool;
-    require strategy0bool == smartVaultContract.helperGetIsStrategyAllowed(e, strategy0);
+    require strategy0bool == smartVaultContract.isStrategyAllowed(strategy0);
     
     // call any function to try and modify isStrategyAllowed[strategy]
     f(e,args);
 
     address strategy1;
     bool strategy1bool;
-    require strategy1bool == smartVaultContract.helperGetIsStrategyAllowed(e, strategy1);
+    require strategy1bool == smartVaultContract.isStrategyAllowed(strategy1);
 
     assert (strategy0 == strategy1) => (strategy0bool == strategy1bool);
 }
@@ -355,14 +377,26 @@ rule whoChangedInvestedValue(method f)
     // investedValue[address strategy0] should not change
     address strategy0;
     uint256 strategy0investedValue;
-    require strategy0investedValue == smartVaultContract.helperGetInvestedValue(e, strategy0);
+    require strategy0investedValue == smartVaultContract.investedValue(strategy0);
     
     // call any function to try and modify investedValue[strategy]
     f(e,args);
 
     address strategy1;
     uint256 strategy1investedValue;
-    require strategy1investedValue == smartVaultContract.helperGetInvestedValue(e, strategy1);
+    require strategy1investedValue == smartVaultContract.investedValue(strategy1);
 
     assert (strategy0 == strategy1) => (strategy0investedValue == strategy1investedValue);
+}
+
+rule testGhostAuthorization() {
+    env e1; 
+    env e2;
+    address base;
+    address quote;
+    address feed;
+    singleAddressAuthorization(e1.msg.sender, select_setPriceFeed());
+    setPriceFeed(e1, base, quote, feed);
+    setPriceFeed(e2, base, quote, feed);
+    assert e1.msg.sender == e2.msg.sender;
 }

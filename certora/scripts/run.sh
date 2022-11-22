@@ -34,7 +34,8 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --solc solc8.2 \
 --loop_iter 2 \
 --optimistic_loop \
---rule sanity \
+--rule testGhostAuthorization \
+--settings -optimisticFallback=true \
 --settings -contractRecursionLimit=1,-byteMapHashingPrecision=10 \
 --msg "mimic -$RULE $MSG" \
 --send_only \
