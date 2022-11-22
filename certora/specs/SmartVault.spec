@@ -119,6 +119,11 @@ methods {
     select_collect() returns (bytes4) envfree
     isStrategyAllowed(address) returns (bool) envfree
     investedValue(address) returns (uint256) envfree
+
+
+    // v2-core/node_modules/@mimic-fi/v2-helpers/contracts/auth/Authorizer.sol
+    isAuthorized(address who, bytes4 what) returns (bool) envfree
+    select_withdraw() returns (bytes4) envfree
 }
 
 /**************************************************
@@ -389,6 +394,7 @@ rule whoChangedInvestedValue(method f)
     assert (strategy0 == strategy1) => (strategy0investedValue == strategy1investedValue);
 }
 
+
 rule testGhostAuthorization() {
     env e1; 
     env e2;
@@ -399,4 +405,28 @@ rule testGhostAuthorization() {
     setPriceFeed(e1, base, quote, feed);
     setPriceFeed(e2, base, quote, feed);
     assert e1.msg.sender == e2.msg.sender;
+}
+
+
+rule onlyAuthUserCanCallFunctions(method f) {
+    env e1;
+    env e2;
+    calldataarg args;
+
+    // setup so only e1.msg.sender is authorized to run any function:
+    bytes4 anyFunctionSelector;
+    singleAddressAuthorization(e1.msg.sender, anyFunctionSelector);
+
+    // bool isAuth;
+    // isAuth = isAuthorized(e1.msg.sender, select_withdraw());
+
+    // assert !isAuth;
+
+
+    // another user (e2.msg.sender) tries to call any function
+    require e1.msg.sender != e2.msg.sender;
+    f@withrevert(e2,args);
+    bool reverted = lastReverted; // true if f(e2,args) reverted
+
+    assert reverted; // this means that always the call reverted    
 }
