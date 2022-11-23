@@ -416,7 +416,7 @@ rule testGhostAuthorization() {
 }
 
 
-rule onlyAuthUserCanCallFunctions(method f) {
+rule onlyAuthUserCanCallFunctions(method f) filtered {f -> !f.isView && !f.isFallback} {
     env e1;
     env e2;
     calldataarg args;
