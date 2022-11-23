@@ -167,6 +167,15 @@ function doubleAddressAuthorization(address who1, address who2, bytes4 what) {
     require !ghostAuthorized[ANY_ADDRESS()][what];
 }
 
+// A helper function to set a unique authorized address (who)
+// for **any** function signature (what)
+function singleAddressGetsTotalControl(address who) {
+    require forall address user.
+                forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig]);
+    require forall address user.
+                forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
+}
+
 /**************************************************
  *                 VALID STATES                   *
  **************************************************/
@@ -413,15 +422,8 @@ rule onlyAuthUserCanCallFunctions(method f) {
     env e2;
     calldataarg args;
 
-    // setup so only e1.msg.sender is authorized to run any function:
-    bytes4 anyFunctionSelector;
-    singleAddressAuthorization(e1.msg.sender, anyFunctionSelector);
-
-    // bool isAuth;
-    // isAuth = isAuthorized(e1.msg.sender, select_withdraw());
-
-    // assert !isAuth;
-
+    // setup - only e1.msg.sender is authorized to run any function:
+    singleAddressGetsTotalControl(e1.msg.sender);
 
     // another user (e2.msg.sender) tries to call any function
     require e1.msg.sender != e2.msg.sender;
