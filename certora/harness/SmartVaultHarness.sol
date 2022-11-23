@@ -7,21 +7,18 @@ pragma solidity ^0.8.2;
 import '../munged/SmartVault.sol';
 
 contract SmartVaultHarness is SmartVault {
-
-    //bytes4(keccak256(bytes('setPriceFeed(address,address,address)')));
-    bytes4 public constant select_setPriceFeed = bytes4(0x67a1d5ab);
-    //bytes4(keccak256(bytes('collect(address,address,uint256,bytes)')));
-    bytes4 public constant select_collect = bytes4(0x5af547e6);
-    //bytes4(keccak256(bytes('setStrategy(address,bool)')));
-    bytes4 public constant select_setStrategy = bytes4(0xbaa82a34);
-    //bytes4(keccak256(bytes('setPriceOracle(address)')));
-    bytes4 public constant select_setPriceOracle = bytes4(0x530e784f);
-    //bytes4(keccak256(bytes('withdraw(address,uint256,address,bytes)')));
-    bytes4 public constant select_withdraw = bytes4(0x9003afee);
-
     
     constructor(address _wrappedNativeToken, address _registry) SmartVault(_wrappedNativeToken, _registry) {}
 
+    function uint32ToBytes4(uint32 x) public pure returns (bytes4) {
+        return bytes4(x);
+    }
+
+    function uint32Sol(uint256 x) public pure returns (uint32) {
+        require (x <= type(uint32).max);
+        return uint32(x);
+    }
+    
     // function helperGetFeeParams(Fee memory fee) public returns (uint256, uint256, address, uint256, uint256, uint256) {
     //     /*struct Fee {
     //         uint256 pct;

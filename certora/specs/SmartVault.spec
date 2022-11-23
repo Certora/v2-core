@@ -8,9 +8,6 @@
     This file is run with scripts/...
 */
 
-
-
-
 /**************************************************
  *                LINKED CONTRACTS                *
  **************************************************/
@@ -21,7 +18,6 @@
 // using DummyERC20B as tokenB
 // using WrappedNativeTokenMock as wrappedToken
 // using StrategyMock as strategyMock
-using SmartVaultHarness as smartVaultContract
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -115,22 +111,25 @@ methods {
     implementationOf(address) returns (address) => DISPATCHER(true)
     implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
     ANY_ADDRESS() returns (address) envfree
-    select_setPriceFeed() returns (bytes4) envfree
-    select_collect() returns (bytes4) envfree
     isStrategyAllowed(address) returns (bool) envfree
     investedValue(address) returns (uint256) envfree
-
-
-    // v2-core/node_modules/@mimic-fi/v2-helpers/contracts/auth/Authorizer.sol
-    isAuthorized(address who, bytes4 what) returns (bool) envfree
-    select_withdraw() returns (bytes4) envfree
+    isAuthorized(address, bytes4) returns (bool) envfree
+    getPriceFeed(address, address) returns (address) envfree
+    uint32ToBytes4(uint32) returns (bytes4) envfree
+    uint32Sol(uint256) returns (uint32) envfree
+    setSwapFee(uint256, uint256, address, uint256)
 }
 
 /**************************************************
  *                  DEFINITIONS                   *
  **************************************************/
-
-
+    definition select_setPriceFeed() returns uint32 = 0x67a1d5ab;
+    definition select_collect() returns uint32 = 0x5af547e6;
+    definition select_setStrategy() returns uint32 = 0xbaa82a34;
+    definition select_setPriceOracle() returns uint32 = 0x530e784f;
+    definition select_withdraw() returns uint32 = 0x9003afee;
+    definition select_wrap() returns uint32 = 0x109b3c83;
+    definition select_unwrap() returns uint32 = 0xb413148e;
 
 /**************************************************
  *                GHOSTS AND HOOKS                *
@@ -154,14 +153,14 @@ hook Sload bool value authorized[KEY address who][KEY bytes4 what] STORAGE {
  **************************************************/
 
 // A helper function to set a unique authorized address (who)
-// for some specific function signature (what)
+// for some specific function signature (what).
 function singleAddressAuthorization(address who, bytes4 what) {
     require forall address user. (user != who => !ghostAuthorized[user][what]);
     require !ghostAuthorized[ANY_ADDRESS()][what];
 }
 
-// A helper function to set a two unique authorized addresses (who1, who2)
-// for some specific function signature (what)
+// A helper function to set two unique authorized addresses (who1, who2)
+// for some specific function signature (what).
 function doubleAddressAuthorization(address who1, address who2, bytes4 what) {
     require forall address user. ( (user != who1 && user != who2) => !ghostAuthorized[user][what]);
     require !ghostAuthorized[ANY_ADDRESS()][what];
@@ -240,14 +239,14 @@ rule whoChangedWithdrawFeeSettings(method f)
 
     // withdrawFee parameters before
     uint256 pct0; uint256 cap0; address token0; uint256 period0; uint256 totalCharged0; uint256 nextResetTime0;
-    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == smartVaultContract.withdrawFee(e);
+    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == withdrawFee(e);
     
     // call any function to try and modify withdrawFee
     f(e,args);
 
     // withdrawFee parameters after
     uint256 pct1; uint256 cap1; address token1; uint256 period1; uint256 totalCharged1; uint256 nextResetTime1;
-    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == smartVaultContract.withdrawFee(e);
+    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == withdrawFee(e);
 
     assert (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == (pct1, cap1, token1, period1, totalCharged1, nextResetTime1);
 }
@@ -260,14 +259,14 @@ rule whoChangedPerformanceFeeSettings(method f)
 
     // performanceFee parameters before
     uint256 pct0; uint256 cap0; address token0; uint256 period0; uint256 totalCharged0; uint256 nextResetTime0;
-    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == smartVaultContract.performanceFee(e);
+    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == performanceFee(e);
     
     // call any function to try and modify performanceFee
     f(e,args);
 
     // performanceFee parameters after
     uint256 pct1; uint256 cap1; address token1; uint256 period1; uint256 totalCharged1; uint256 nextResetTime1;
-    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == smartVaultContract.performanceFee(e);
+    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == performanceFee(e);
 
     assert (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == (pct1, cap1, token1, period1, totalCharged1, nextResetTime1);
 }
@@ -280,14 +279,14 @@ rule whoChangedSwapFeeSettings(method f)
 
     // swapFee parameters before
     uint256 pct0; uint256 cap0; address token0; uint256 period0; uint256 totalCharged0; uint256 nextResetTime0;
-    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == smartVaultContract.swapFee(e);
+    require (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == swapFee(e);
     
     // call any function to try and modify swapFee
     f(e,args);
 
     // swapFee parameters after
     uint256 pct1; uint256 cap1; address token1; uint256 period1; uint256 totalCharged1; uint256 nextResetTime1;
-    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == smartVaultContract.swapFee(e);
+    require (pct1, cap1, token1, period1, totalCharged1, nextResetTime1) == swapFee(e);
 
     assert (pct0, cap0, token0, period0, totalCharged0, nextResetTime0) == (pct1, cap1, token1, period1, totalCharged1, nextResetTime1);
 }
@@ -300,14 +299,14 @@ rule whoChangedThePriceOracle(method f)
 
     // priceOracle address before
     address priceOracle0;
-    require priceOracle0 == smartVaultContract.priceOracle(e);
+    require priceOracle0 == priceOracle(e);
     
     // call any function to try and modify priceOracle
     f(e,args);
 
     // priceOracle address after
     address priceOracle1;
-    require priceOracle1 == smartVaultContract.priceOracle(e);
+    require priceOracle1 == priceOracle(e);
 
     assert priceOracle0 == priceOracle1;
 }
@@ -320,14 +319,14 @@ rule whoChangedTheSwapConnector(method f)
 
     // swapConnector address before
     address swapConnector0;
-    require swapConnector0 == smartVaultContract.swapConnector(e);
+    require swapConnector0 == swapConnector(e);
     
     // call any function to try and modify swapConnector
     f(e,args);
 
     // swapConnector address after
     address swapConnector1;
-    require swapConnector1 == smartVaultContract.swapConnector(e);
+    require swapConnector1 == swapConnector(e);
 
     assert swapConnector0 == swapConnector1;
 }
@@ -340,14 +339,14 @@ rule whoChangedTheFeeCollector(method f)
 
     // feeCollector address before
     address feeCollector0;
-    require feeCollector0 == smartVaultContract.feeCollector(e);
+    require feeCollector0 == feeCollector(e);
     
     // call any function to try and modify feeCollector
     f(e,args);
 
     // feeCollector address after
     address feeCollector1;
-    require feeCollector1 == smartVaultContract.feeCollector(e);
+    require feeCollector1 == feeCollector(e);
 
     assert feeCollector0 == feeCollector1;
 }
@@ -361,14 +360,14 @@ rule whoChangedStrategyPermissions(method f)
     // isStrategyAllowed[address strategy0] should not change
     address strategy0;
     bool strategy0bool;
-    require strategy0bool == smartVaultContract.isStrategyAllowed(strategy0);
+    require strategy0bool == isStrategyAllowed(strategy0);
     
     // call any function to try and modify isStrategyAllowed[strategy]
     f(e,args);
 
     address strategy1;
     bool strategy1bool;
-    require strategy1bool == smartVaultContract.isStrategyAllowed(strategy1);
+    require strategy1bool == isStrategyAllowed(strategy1);
 
     assert (strategy0 == strategy1) => (strategy0bool == strategy1bool);
 }
@@ -382,14 +381,14 @@ rule whoChangedInvestedValue(method f)
     // investedValue[address strategy0] should not change
     address strategy0;
     uint256 strategy0investedValue;
-    require strategy0investedValue == smartVaultContract.investedValue(strategy0);
+    require strategy0investedValue == investedValue(strategy0);
     
     // call any function to try and modify investedValue[strategy]
     f(e,args);
 
     address strategy1;
     uint256 strategy1investedValue;
-    require strategy1investedValue == smartVaultContract.investedValue(strategy1);
+    require strategy1investedValue == investedValue(strategy1);
 
     assert (strategy0 == strategy1) => (strategy0investedValue == strategy1investedValue);
 }
@@ -401,7 +400,7 @@ rule testGhostAuthorization() {
     address base;
     address quote;
     address feed;
-    singleAddressAuthorization(e1.msg.sender, select_setPriceFeed());
+    singleAddressAuthorization(e1.msg.sender, uint32ToBytes4(select_setPriceFeed()));
     setPriceFeed(e1, base, quote, feed);
     setPriceFeed(e2, base, quote, feed);
     assert e1.msg.sender == e2.msg.sender;
@@ -430,3 +429,99 @@ rule onlyAuthUserCanCallFunctions(method f) {
 
     assert reverted; // this means that always the call reverted    
 }
+rule uniqueAddressChangesPriceFeed(method f) {
+    env e;
+    calldataarg args;
+    address priceFeedAuthorized;
+    address base;
+    address quote;
+    address feed0 = getPriceFeed(base, quote);
+
+    // Set a single authorized address to set price feed.
+    singleAddressAuthorization(priceFeedAuthorized, uint32ToBytes4(select_setPriceFeed()));
+    require ghostAuthorized[priceFeedAuthorized][uint32ToBytes4(select_setPriceFeed())];
+    require priceFeedAuthorized != e.msg.sender;
+    f(e, args);
+
+    address feed1 = getPriceFeed(base, quote);
+
+    assert feed0 == feed1;
+}
+
+rule uniquenessOfAuthorization(method f, method g) 
+filtered{f -> !f.isView, g -> !g.isView} {
+//filtered{f -> f.selector == setPriceFeed(address, address, address).selector,
+//g -> g.selector == setSwapFee(uint256, uint256, address, uint256).selector}{
+    env ef;
+    env eg;
+    calldataarg args_f;
+    calldataarg args_g;
+    // Unique address authorization for the called methods.
+    singleAddressAuthorization(ef.msg.sender, uint32ToBytes4(f.selector));
+    singleAddressAuthorization(eg.msg.sender, uint32ToBytes4(g.selector));
+    bool authorized_G = ghostAuthorized[eg.msg.sender][g.selector];
+
+    // Call f, g
+    f(ef, args_f);
+    g@withrevert(eg, args_g);
+
+    assert !authorized_G => lastReverted;
+}
+
+
+/**************************************************
+ *           Wrapped token METHOD INTEGRITY       *
+ **************************************************/
+
+rule wrapUnwrapIntegrity(uint256 amount) {
+    env e1;
+    env e2;
+    bytes data;
+    uint256 wrappedAmount = wrap(e1, amount, data);
+    uint256 unWrappedAmount = unwrap(e2, wrappedAmount, data);
+    assert amount == unWrappedAmount;
+}
+
+rule unwrapWrapIntegrity(uint256 amount) {
+    env e1;
+    env e2;
+    bytes data;
+    uint256 unWrappedAmount = unwrap(e1, amount, data);
+    uint256 wrappedAmount = wrap(e2, unWrappedAmount, data);
+    assert amount == wrappedAmount;
+}
+
+rule unwrapCannotRevertAfterWrap(uint256 amount) {
+    env e;
+    bytes data;
+    uint256 amountToUnwrap;
+    require amountToUnwrap > 0;
+    require isAuthorized(e.msg.sender, uint32ToBytes4(select_unwrap()));
+    uint256 wrappedAmount = wrap(e, amount, data);
+    unwrap@withrevert(e, amountToUnwrap, data);
+    
+    assert amountToUnwrap <= wrappedAmount => !lastReverted;
+}
+
+rule wrapCannotRevertAfterUnwrap(uint256 amount) {
+    env e;
+    bytes data;
+    uint256 amountToWrap;
+    require amountToWrap > 0;
+    require isAuthorized(e.msg.sender, uint32ToBytes4(select_wrap()));
+    uint256 unwrappedAmount = unwrap(e, amount, data);
+    wrap@withrevert(e, amountToWrap, data);
+    
+    assert amountToWrap <= unwrappedAmount => !lastReverted;
+}
+
+// Currently there is a consistency problem so this rule is violated.
+// A well-functioning ghost should verify this rule.
+rule ghostAuthroizationConsistency(uint256 select) {
+    bytes4 what = uint32ToBytes4(uint32Sol(select));
+    address who;
+    bool auth = isAuthorized(who, what);
+    assert (ghostAuthorized[who][what] <=> auth) || (ghostAuthorized[ANY_ADDRESS()][what] <=> auth);
+}
+
+/**************************************************/
