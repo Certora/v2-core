@@ -16,7 +16,7 @@
 // using DummyERC20Impl as dummyERC20Token
 // using DummyERC20A as tokenA
 // using DummyERC20B as tokenB
-// using WrappedNativeTokenMock as wrappedToken
+ using WrappedNativeTokenMock as WRToken
 // using StrategyMock as strategyMock
 
 /**************************************************
@@ -31,7 +31,8 @@ methods {
 	transfer(address, uint256) => DISPATCHER(true)
     balanceOf(address) => DISPATCHER(true)
     approve(address, uint256) => DISPATCHER(true)
-
+    decimals() => DISPATCHER(true)
+    WRToken.balanceOf(address) returns(uint256) envfree
     // packages/smart-vault/contracts/test/samples/TokenMock.sol
     mint(address, uint256) => DISPATCHER(true)
     burn(address, uint256) => DISPATCHER(true)
@@ -93,11 +94,11 @@ methods {
     lastValue(address) returns (uint256) 
     // lastValue(address) returns (uint256) => DISPATCHER(true) // causes error in rule sanity -> exit()
     // claim(bytes) returns (address[], uint256[]) => DISPATCHER(true) // works, but too slow
-    claim(bytes) returns (address[], uint256[]) 
+    //claim(bytes) returns (address[], uint256[]) 
     // join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true) // old version
-    join(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) // causes error in rule sanity -> exit()
+    //join(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) // causes error in rule sanity -> exit()
     // exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true) // old version
-    exit(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) 
+    //exit(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) 
 
     // the StrategyMock dispatchers caused the tool to TIMEOUT because of
     // incorrect calling in the SmartVault.sol
@@ -183,6 +184,12 @@ function singleAddressGetsTotalControl(address who) {
     require forall address user.
                 forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig]);
     require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
+}
+
+function CVLDecimals() returns uint256 {
+    uint256 dec;
+    require dec >=4 && dec <= 27;
+    return dec;
 }
 
 /**************************************************
@@ -494,22 +501,31 @@ filtered{f -> !f.isView, g -> !g.isView} {
  *           Wrapped token METHOD INTEGRITY       *
  **************************************************/
 
-rule wrapUnwrapIntegrity(uint256 amount) {
+rule wrapUnwrapIntegrity(uint256 amount, address user) {
     env e1;
     env e2;
     bytes data;
-    uint256 wrappedAmount = wrap(e1, amount, data);
-    uint256 unWrappedAmount = unwrap(e2, wrappedAmount, data);
+    uint256 balance1 = WRToken.balanceOf(user);
+        uint256 wrappedAmount = wrap(e1, amount, data);
+        uint256 unWrappedAmount = unwrap(e2, wrappedAmount, data);
+    uint256 balance2 = WRToken.balanceOf(user);
+
     assert amount == unWrappedAmount;
+    assert balance1 == balance2;
 }
 
-rule unwrapWrapIntegrity(uint256 amount) {
+rule unwrapWrapIntegrity(uint256 amount, address user) {
     env e1;
     env e2;
     bytes data;
-    uint256 unWrappedAmount = unwrap(e1, amount, data);
-    uint256 wrappedAmount = wrap(e2, unWrappedAmount, data);
+    
+    uint256 balance1 = WRToken.balanceOf(user);
+        uint256 unWrappedAmount = unwrap(e1, amount, data);
+        uint256 wrappedAmount = wrap(e2, unWrappedAmount, data);
+    uint256 balance2 = WRToken.balanceOf(user);
+    
     assert amount == wrappedAmount;
+    assert balance1 == balance2;
 }
 
 rule unwrapCannotRevertAfterWrap(uint256 amount) {
@@ -551,3 +567,13 @@ rule ghostAuthorizationConsistency() {
  invariant priceInvertible(address base, address quote)
      getPrice(base, quote) * getPrice(quote, base) == FixedPoint_ONE()*FixedPoint_ONE()
      filtered{f -> !delegateCalls(f)}
+
+rule getPriceMutuallyRevert(address base, address quote) {
+    
+    getPrice@withrevert(base, quote);
+    bool revert1 = lastReverted;
+    getPrice@withrevert(quote, base);
+    bool revert2 = lastReverted;
+    
+    assert revert1 <=> revert2;
+}

@@ -13,7 +13,9 @@ contract PriceOracleHarness is PriceOracle {
     // Certora : replace Aggregator interface with mappings.
     function _getFeedData(address feed) public override view returns (uint256 price, uint256 decimals) {
         decimals = oracleDecimals[feed];
-        require (decimals >= 4 && decimals <= 27, "wrong decimals");
+        decimals = (decimals < 4) ? 4 : decimals;
+        decimals = (decimals > 27) ? 27 : decimals;
+        //require (decimals >= 4 && decimals <= 27, "wrong decimals");
         price = SafeCast.toUint256(oracleRoundData[feed]);
     }
 }

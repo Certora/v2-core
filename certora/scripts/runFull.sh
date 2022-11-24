@@ -21,6 +21,6 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --staging \
 --loop_iter 2 \
 --optimistic_loop \
---rule priceInvertible \
+--rule wrapUnwrapIntegrity \
 --settings -optimisticFallback=true,-contractRecursionLimit=1 \
---msg "mimic SmartVault: priceInvertible" 
+--msg "mimic SmartVault: wrapUnwrapIntegrity" 
