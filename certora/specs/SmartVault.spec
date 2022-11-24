@@ -130,6 +130,8 @@ methods {
     definition select_withdraw() returns uint32 = 0x9003afee;
     definition select_wrap() returns uint32 = 0x109b3c83;
     definition select_unwrap() returns uint32 = 0xb413148e;
+    //definition select_setPriceFeeds() returns uint32 = 0x4ed31090;
+    definition select_setPriceFeeds() returns uint32 = setPriceFeeds(address[],address[],address[]).selector;
 
 /**************************************************
  *                GHOSTS AND HOOKS                *
@@ -171,8 +173,7 @@ function doubleAddressAuthorization(address who1, address who2, bytes4 what) {
 function singleAddressGetsTotalControl(address who) {
     require forall address user.
                 forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig]);
-    require forall address user.
-                forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
+    require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
 }
 
 /**************************************************
@@ -417,20 +418,29 @@ rule testGhostAuthorization() {
 
 
 rule onlyAuthUserCanCallFunctions(method f) filtered {f -> !f.isView && !f.isFallback} {
+    // this rule checks that only authorized user can run all the methods in the contract without reverting
+    // all the other users when trying to execute any method should revert
+    // therefore the rule should only fail on
+    // * initialize(address) - this method should be run only once
+    // * setPriceFeeds(address[],address[],address[]) - doesn't revert if the loop isn't executed
+    // regarding setPriceFeeds() we manually checked that it also requires authorization
     env e1;
     env e2;
     calldataarg args;
 
     // setup - only e1.msg.sender is authorized to run any function:
     singleAddressGetsTotalControl(e1.msg.sender);
+    //singleAddressAuthorization(e1.msg.sender, uint32ToBytes4(select_setPriceFeeds()));
 
     // another user (e2.msg.sender) tries to call any function
     require e1.msg.sender != e2.msg.sender;
     f@withrevert(e2,args);
+    //setPriceFeeds@withrevert(e2,args);
     bool reverted = lastReverted; // true if f(e2,args) reverted
 
     assert reverted; // this means that always the call reverted    
 }
+
 rule uniqueAddressChangesPriceFeed(method f) {
     env e;
     calldataarg args;
@@ -520,7 +530,8 @@ rule wrapCannotRevertAfterUnwrap(uint256 amount) {
 // Currently there is a consistency problem so this rule is violated.
 // A well-functioning ghost should verify this rule.
 rule ghostAuthroizationConsistency(uint256 select) {
-    bytes4 what = uint32ToBytes4(uint32Sol(select));
+    //bytes4 what = uint32ToBytes4(uint32Sol(select));
+    bytes4 what;
     address who;
     bool auth = isAuthorized(who, what);
     assert (ghostAuthorized[who][what] <=> auth) || (ghostAuthorized[ANY_ADDRESS()][what] <=> auth);
