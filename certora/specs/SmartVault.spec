@@ -115,6 +115,7 @@ methods {
     investedValue(address) returns (uint256) envfree
     isAuthorized(address, bytes4) returns (bool) envfree
     getPriceFeed(address, address) returns (address) envfree
+    getPrice(address, address) returns (uint256) envfree
     uint32ToBytes4(uint32) returns (bytes4) envfree
     uint32Sol(uint256) returns (uint32) envfree
     setSwapFee(uint256, uint256, address, uint256)
@@ -123,15 +124,23 @@ methods {
 /**************************************************
  *                  DEFINITIONS                   *
  **************************************************/
-    definition select_setPriceFeed() returns uint32 = 0x67a1d5ab;
-    definition select_collect() returns uint32 = 0x5af547e6;
-    definition select_setStrategy() returns uint32 = 0xbaa82a34;
-    definition select_setPriceOracle() returns uint32 = 0x530e784f;
-    definition select_withdraw() returns uint32 = 0x9003afee;
-    definition select_wrap() returns uint32 = 0x109b3c83;
-    definition select_unwrap() returns uint32 = 0xb413148e;
-    //definition select_setPriceFeeds() returns uint32 = 0x4ed31090;
-    definition select_setPriceFeeds() returns uint32 = setPriceFeeds(address[],address[],address[]).selector;
+definition select_setPriceFeed() returns uint32 = 0x67a1d5ab;
+definition select_collect() returns uint32 = 0x5af547e6;
+definition select_setStrategy() returns uint32 = 0xbaa82a34;
+definition select_setPriceOracle() returns uint32 = 0x530e784f;
+definition select_withdraw() returns uint32 = 0x9003afee;
+definition select_wrap() returns uint32 = 0x109b3c83;
+definition select_unwrap() returns uint32 = 0xb413148e;
+definition select_setPriceFeeds() returns uint32 = 0x4ed31090;
+//definition select_setPriceFeeds() returns uint32 = setPriceFeeds(address[],address[],address[]).selector;
+
+definition delegateCalls(method f) returns bool = 
+    (f.selector == join(address,address[],uint256[],uint256,bytes).selector ||
+    f.selector == claim(address,bytes).selector ||
+    f.selector == exit(address,address[],uint256[],uint256,bytes).selector ||
+    f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector);
+
+definition FixedPoint_ONE() returns uint256 = 1000000000000000000;
 
 /**************************************************
  *                GHOSTS AND HOOKS                *
@@ -416,8 +425,8 @@ rule testGhostAuthorization() {
     assert e1.msg.sender == e2.msg.sender;
 }
 
-
-rule onlyAuthUserCanCallFunctions(method f) filtered {f -> !f.isView && !f.isFallback} {
+rule onlyAuthUserCanCallFunctions(method f) 
+filtered {f -> !f.isView && !f.isFallback} {
     // this rule checks that only authorized user can run all the methods in the contract without reverting
     // all the other users when trying to execute any method should revert
     // therefore the rule should only fail on
@@ -527,14 +536,18 @@ rule wrapCannotRevertAfterUnwrap(uint256 amount) {
     assert amountToWrap <= unwrappedAmount => !lastReverted;
 }
 
-// Currently there is a consistency problem so this rule is violated.
-// A well-functioning ghost should verify this rule.
-rule ghostAuthroizationConsistency(uint256 select) {
-    //bytes4 what = uint32ToBytes4(uint32Sol(select));
+// Currently there is an inconsistency problem so this rule is violated.
+// A well-functioning ghost should yield a correct rule.
+rule ghostAuthorizationConsistency() {
     bytes4 what;
     address who;
     bool auth = isAuthorized(who, what);
-    assert (ghostAuthorized[who][what] <=> auth) || (ghostAuthorized[ANY_ADDRESS()][what] <=> auth);
+    assert auth == (ghostAuthorized[who][what] || ghostAuthorized[ANY_ADDRESS()][what]);
 }
 
-/**************************************************/
+/**************************************************
+ *           Price Oracle Integrity     *
+ **************************************************/
+ invariant priceInvertible(address base, address quote)
+     getPrice(base, quote) * getPrice(quote, base) == FixedPoint_ONE()*FixedPoint_ONE()
+     filtered{f -> !delegateCalls(f)}
