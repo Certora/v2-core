@@ -17,6 +17,7 @@
 // using DummyERC20A as tokenA
 // using DummyERC20B as tokenB
  using WrappedNativeTokenMock as WRToken
+ using PriceOracleHarness as oracle
 // using StrategyMock as strategyMock
 
 /**************************************************
@@ -105,10 +106,6 @@ methods {
     // fixed the original code by changing "strategy." to "IStrategy(strategy)."
 
 
-    ////////////////////////////////////////
-    // packages/registry/contracts/registry/IRegistry.sol
-    // using the implementation at:
-    // packages/registry/contracts/registry/Registry.sol
     implementationOf(address) returns (address) => DISPATCHER(true)
     implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
     ANY_ADDRESS() returns (address) envfree
@@ -120,6 +117,12 @@ methods {
     uint32ToBytes4(uint32) returns (bytes4) envfree
     uint32Sol(uint256) returns (uint32) envfree
     setSwapFee(uint256, uint256, address, uint256)
+
+    // Price oracle
+    oracle._getFeedData(address) returns (uint256, uint256) envfree
+    oracle.getFeedDecimals(address) returns (uint256) envfree
+    oracle.getERC20Decimals(address) returns (uint256) envfree
+    oracle.pow10(uint256) returns (uint256) envfree
 }
 
 /**************************************************
@@ -186,10 +189,27 @@ function singleAddressGetsTotalControl(address who) {
     require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
 }
 
-function CVLDecimals() returns uint256 {
-    uint256 dec;
-    require dec >=4 && dec <= 27;
-    return dec;
+// Realistic value for the decimals (4<=dec<=27)
+function requireValidDecimals(uint256 decimals) {
+    require decimals >=4 && decimals <= 27;
+}
+
+// Consistency of the decimals between the ERC20 definition for the quote,
+// and the decimals from the chainlink oracle feed.
+function matchDecimals(address base, address quote) {
+    require oracle.getFeedDecimals(getPriceFeed(base, quote)) == 
+        oracle.getERC20Decimals(quote);
+}
+
+// Condition to match mutual prices from chainlink price oracle
+function matchMutualPrices(address base, address quote) returns bool {
+    address feed1 = getPriceFeed(base, quote);
+    address feed2 = getPriceFeed(quote, base);
+    uint256 price1; uint256 dec1;
+    uint256 price2; uint256 dec2;
+    price1, dec1 = oracle._getFeedData(feed1);
+    price2, dec2 = oracle._getFeedData(feed2);
+    return (price1 * price2 == oracle.pow10(dec1 + dec2));
 }
 
 /**************************************************
@@ -564,10 +584,6 @@ rule ghostAuthorizationConsistency() {
 /**************************************************
  *           Price Oracle Integrity     *
  **************************************************/
- invariant priceInvertible(address base, address quote)
-     getPrice(base, quote) * getPrice(quote, base) == FixedPoint_ONE()*FixedPoint_ONE()
-     filtered{f -> !delegateCalls(f)}
-
 rule getPriceMutuallyRevert(address base, address quote) {
     
     getPrice@withrevert(base, quote);
@@ -576,4 +592,22 @@ rule getPriceMutuallyRevert(address base, address quote) {
     bool revert2 = lastReverted;
     
     assert revert1 <=> revert2;
+}
+
+// This is not necessarily true!
+// There could be a mismatch between the prices of two tokens and the inverse.
+
+// In addition, the invariant is violated for every function which activates a
+// delegatecall since it can potentially change the price feeds addresses and therefore
+// the oracle prices for any pair.
+invariant tokensPriceReciprocity(address base, address quote)
+     matchMutualPrices(base, quote)
+     filtered{f -> f.selector == join(address,address[],uint256[],uint256,bytes).selector}
+
+// Tests the prover's modeling of pow10(x) = 10**x
+rule pow10Integrity(uint256 x, uint256 y) {
+    uint256 z = x+y;
+    assert oracle.pow10(z) == oracle.pow10(x)*oracle.pow10(y);
+    assert oracle.pow10(1) == 10;
+    assert oracle.pow10(2) == 100;
 }

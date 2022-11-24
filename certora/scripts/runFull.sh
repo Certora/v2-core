@@ -6,6 +6,7 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
             packages/smart-vault/contracts/test/core/StrategyMock.sol \
             packages/registry/contracts/registry/Registry.sol \
             packages/smart-vault/contracts/test/samples/DexMock.sol \
+            certora/harness/TokenMock.sol:TokenMock_A \
 \
 --verify SmartVaultHarness:certora/specs/SmartVault.spec \
 \
@@ -21,6 +22,6 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --staging \
 --loop_iter 2 \
 --optimistic_loop \
---rule wrapUnwrapIntegrity \
---settings -optimisticFallback=true,-contractRecursionLimit=1 \
---msg "mimic SmartVault: wrapUnwrapIntegrity" 
+--rule tokensPriceReciprocity \
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=100 \
+--msg "mimic SmartVault: tokensPriceReciprocity" 
