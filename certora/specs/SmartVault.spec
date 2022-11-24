@@ -9,6 +9,37 @@
 */
 
 /**************************************************
+ *      Top Level Properties / Rule Ideas         *
+ **************************************************/
+
+// 1.   Only specific allowed users can execute specific methods in the contract
+
+// 2.   Users allowed to execute only method A,
+//      should not be able to execute method that is not A
+
+// 3.   Owner of the SmartVault, should not lose access to it (no one can block the owner)
+
+// 4.   Only contracts set in the Registry should be accessible by the SmartVault
+
+// 5.   If a contract is available in the Registry,
+//      the owner of SmartVault should be able to use it
+
+// 6.   User that is not authorized to change the Registry should not be able to do so
+
+// 7.   If any of the linked contracts (PriceOracle, Registry, SwapConnector, Strategy...)
+//      is not available, this should not block SmartVault from executing methods that
+//      don't use the contracts.
+//      For example: If SwapConnector is not available, this can (and probably will)
+//                   prevent using swap(), but it should not prevent calling withdraw()
+
+// 8.   PriceOracle should not return a price of 0
+
+// 9.   Swap connector should decrease the balanceOf(TokenOut)
+//      and increase the balanceOf(TokenIn)
+
+
+
+/**************************************************
  *                LINKED CONTRACTS                *
  **************************************************/
 // Declaration of contracts used in the spec
