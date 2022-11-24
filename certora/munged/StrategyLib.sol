@@ -28,6 +28,7 @@ library StrategyLib {
      * IMPORTANT! This helper method does not check any of the given params, these should be checked beforehand.
      */
     function claim(address strategy, bytes memory data) internal returns (address[] memory, uint256[] memory) {
+        // Next line was commented by Certora, waiting for a fix of delegatecall (CER-1481)
         //bytes memory claimData = abi.encodeWithSelector(IStrategy.claim.selector, data);
 
         // solhint-disable-next-line avoid-low-level-calls
@@ -50,6 +51,7 @@ library StrategyLib {
         uint256 slippage,
         bytes memory data
     ) internal returns (address[] memory tokensOut, uint256[] memory amountsOut, uint256 value) {
+        // Next line was commented by Certora, waiting for a fix of delegatecall (CER-1481)
         //bytes memory joinData = abi.encodeWithSelector(IStrategy.join.selector, tokensIn, amountsIn, slippage, data);
         
         // solhint-disable-next-line avoid-low-level-calls
@@ -72,6 +74,7 @@ library StrategyLib {
         uint256 slippage,
         bytes memory data
     ) internal returns (address[] memory tokensOut, uint256[] memory amountsOut, uint256 value) {
+        // Next line was commented by Certora, waiting for a fix of delegatecall (CER-1481)
         //bytes memory exitData = abi.encodeWithSelector(IStrategy.exit.selector, tokensIn, amountsIn, slippage, data);
 
         // solhint-disable-next-line avoid-low-level-calls
