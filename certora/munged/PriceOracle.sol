@@ -22,9 +22,7 @@ import '@mimic-fi/v2-helpers/contracts/math/FixedPoint.sol';
 import '@mimic-fi/v2-helpers/contracts/math/UncheckedMath.sol';
 import '@mimic-fi/v2-registry/contracts/implementations/BaseImplementation.sol';
 
-//import './IPriceOracle.sol';
 import '../../packages/price-oracle/contracts/oracle/IPriceOracle.sol';
-//import '../feeds/IPriceFeedProvider.sol';
 import '../../packages/price-oracle/contracts/feeds/IPriceFeedProvider.sol';
 
 /**
@@ -123,7 +121,8 @@ contract PriceOracle is IPriceOracle, BaseImplementation {
      * @return price Requested price
      * @return decimals Decimals of the requested price
      */
-    function _getFeedData(address feed) public view returns (uint256 price, uint256 decimals) {
+     // Certora : added virtual attribute
+    function _getFeedData(address feed) public virtual view returns (uint256 price, uint256 decimals) {
         decimals = AggregatorV3Interface(feed).decimals();
         (, int256 priceInt, , , ) = AggregatorV3Interface(feed).latestRoundData();
         price = SafeCast.toUint256(priceInt);

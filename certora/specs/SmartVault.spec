@@ -16,7 +16,7 @@
 // using DummyERC20Impl as dummyERC20Token
 // using DummyERC20A as tokenA
 // using DummyERC20B as tokenB
-// using WrappedNativeTokenMock as wrappedToken
+ using WrappedNativeTokenMock as WRToken
 // using StrategyMock as strategyMock
 
 /**************************************************
@@ -31,7 +31,8 @@ methods {
 	transfer(address, uint256) => DISPATCHER(true)
     balanceOf(address) => DISPATCHER(true)
     approve(address, uint256) => DISPATCHER(true)
-
+    decimals() => DISPATCHER(true)
+    WRToken.balanceOf(address) returns(uint256) envfree
     // packages/smart-vault/contracts/test/samples/TokenMock.sol
     mint(address, uint256) => DISPATCHER(true)
     burn(address, uint256) => DISPATCHER(true)
@@ -93,11 +94,11 @@ methods {
     lastValue(address) returns (uint256) 
     // lastValue(address) returns (uint256) => DISPATCHER(true) // causes error in rule sanity -> exit()
     // claim(bytes) returns (address[], uint256[]) => DISPATCHER(true) // works, but too slow
-    claim(bytes) returns (address[], uint256[]) 
+    //claim(bytes) returns (address[], uint256[]) 
     // join(uint256, uint256, bytes) returns (uint256) => DISPATCHER(true) // old version
-    join(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) // causes error in rule sanity -> exit()
+    //join(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) // causes error in rule sanity -> exit()
     // exit(uint256, uint256, bytes) returns (uint256, uint256) => DISPATCHER(true) // old version
-    exit(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) 
+    //exit(address[],uint256[],uint256,bytes) returns (address[], uint256[], uint256) 
 
     // the StrategyMock dispatchers caused the tool to TIMEOUT because of
     // incorrect calling in the SmartVault.sol
@@ -115,6 +116,7 @@ methods {
     investedValue(address) returns (uint256) envfree
     isAuthorized(address, bytes4) returns (bool) envfree
     getPriceFeed(address, address) returns (address) envfree
+    getPrice(address, address) returns (uint256) envfree
     uint32ToBytes4(uint32) returns (bytes4) envfree
     uint32Sol(uint256) returns (uint32) envfree
     setSwapFee(uint256, uint256, address, uint256)
@@ -123,15 +125,23 @@ methods {
 /**************************************************
  *                  DEFINITIONS                   *
  **************************************************/
-    definition select_setPriceFeed() returns uint32 = 0x67a1d5ab;
-    definition select_collect() returns uint32 = 0x5af547e6;
-    definition select_setStrategy() returns uint32 = 0xbaa82a34;
-    definition select_setPriceOracle() returns uint32 = 0x530e784f;
-    definition select_withdraw() returns uint32 = 0x9003afee;
-    definition select_wrap() returns uint32 = 0x109b3c83;
-    definition select_unwrap() returns uint32 = 0xb413148e;
-    //definition select_setPriceFeeds() returns uint32 = 0x4ed31090;
-    definition select_setPriceFeeds() returns uint32 = setPriceFeeds(address[],address[],address[]).selector;
+definition select_setPriceFeed() returns uint32 = 0x67a1d5ab;
+definition select_collect() returns uint32 = 0x5af547e6;
+definition select_setStrategy() returns uint32 = 0xbaa82a34;
+definition select_setPriceOracle() returns uint32 = 0x530e784f;
+definition select_withdraw() returns uint32 = 0x9003afee;
+definition select_wrap() returns uint32 = 0x109b3c83;
+definition select_unwrap() returns uint32 = 0xb413148e;
+definition select_setPriceFeeds() returns uint32 = 0x4ed31090;
+//definition select_setPriceFeeds() returns uint32 = setPriceFeeds(address[],address[],address[]).selector;
+
+definition delegateCalls(method f) returns bool = 
+    (f.selector == join(address,address[],uint256[],uint256,bytes).selector ||
+    f.selector == claim(address,bytes).selector ||
+    f.selector == exit(address,address[],uint256[],uint256,bytes).selector ||
+    f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector);
+
+definition FixedPoint_ONE() returns uint256 = 1000000000000000000;
 
 /**************************************************
  *                GHOSTS AND HOOKS                *
@@ -174,6 +184,12 @@ function singleAddressGetsTotalControl(address who) {
     require forall address user.
                 forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig]);
     require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
+}
+
+function CVLDecimals() returns uint256 {
+    uint256 dec;
+    require dec >=4 && dec <= 27;
+    return dec;
 }
 
 /**************************************************
@@ -416,8 +432,8 @@ rule testGhostAuthorization() {
     assert e1.msg.sender == e2.msg.sender;
 }
 
-
-rule onlyAuthUserCanCallFunctions(method f) filtered {f -> !f.isView && !f.isFallback} {
+rule onlyAuthUserCanCallFunctions(method f) 
+filtered {f -> !f.isView && !f.isFallback} {
     // this rule checks that only authorized user can run all the methods in the contract without reverting
     // all the other users when trying to execute any method should revert
     // therefore the rule should only fail on
@@ -485,22 +501,31 @@ filtered{f -> !f.isView, g -> !g.isView} {
  *           Wrapped token METHOD INTEGRITY       *
  **************************************************/
 
-rule wrapUnwrapIntegrity(uint256 amount) {
+rule wrapUnwrapIntegrity(uint256 amount, address user) {
     env e1;
     env e2;
     bytes data;
-    uint256 wrappedAmount = wrap(e1, amount, data);
-    uint256 unWrappedAmount = unwrap(e2, wrappedAmount, data);
+    uint256 balance1 = WRToken.balanceOf(user);
+        uint256 wrappedAmount = wrap(e1, amount, data);
+        uint256 unWrappedAmount = unwrap(e2, wrappedAmount, data);
+    uint256 balance2 = WRToken.balanceOf(user);
+
     assert amount == unWrappedAmount;
+    assert balance1 == balance2;
 }
 
-rule unwrapWrapIntegrity(uint256 amount) {
+rule unwrapWrapIntegrity(uint256 amount, address user) {
     env e1;
     env e2;
     bytes data;
-    uint256 unWrappedAmount = unwrap(e1, amount, data);
-    uint256 wrappedAmount = wrap(e2, unWrappedAmount, data);
+    
+    uint256 balance1 = WRToken.balanceOf(user);
+        uint256 unWrappedAmount = unwrap(e1, amount, data);
+        uint256 wrappedAmount = wrap(e2, unWrappedAmount, data);
+    uint256 balance2 = WRToken.balanceOf(user);
+    
     assert amount == wrappedAmount;
+    assert balance1 == balance2;
 }
 
 rule unwrapCannotRevertAfterWrap(uint256 amount) {
@@ -527,14 +552,28 @@ rule wrapCannotRevertAfterUnwrap(uint256 amount) {
     assert amountToWrap <= unwrappedAmount => !lastReverted;
 }
 
-// Currently there is a consistency problem so this rule is violated.
-// A well-functioning ghost should verify this rule.
-rule ghostAuthroizationConsistency(uint256 select) {
-    //bytes4 what = uint32ToBytes4(uint32Sol(select));
+// Currently there is an inconsistency problem so this rule is violated.
+// A well-functioning ghost should yield a correct rule.
+rule ghostAuthorizationConsistency() {
     bytes4 what;
     address who;
     bool auth = isAuthorized(who, what);
-    assert (ghostAuthorized[who][what] <=> auth) || (ghostAuthorized[ANY_ADDRESS()][what] <=> auth);
+    assert auth == (ghostAuthorized[who][what] || ghostAuthorized[ANY_ADDRESS()][what]);
 }
 
-/**************************************************/
+/**************************************************
+ *           Price Oracle Integrity     *
+ **************************************************/
+ invariant priceInvertible(address base, address quote)
+     getPrice(base, quote) * getPrice(quote, base) == FixedPoint_ONE()*FixedPoint_ONE()
+     filtered{f -> !delegateCalls(f)}
+
+rule getPriceMutuallyRevert(address base, address quote) {
+    
+    getPrice@withrevert(base, quote);
+    bool revert1 = lastReverted;
+    getPrice@withrevert(quote, base);
+    bool revert2 = lastReverted;
+    
+    assert revert1 <=> revert2;
+}
