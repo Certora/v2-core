@@ -22,7 +22,7 @@
 // 4.   Only contracts set in the Registry should be accessible by the SmartVault
 
 // 5.   If a contract is available in the Registry,
-//      the owner of SmartVault should be able to use it
+//      the owner of SmartVault should be able to use it (same as 4)
 
 // 6.   User that is not authorized to change the Registry should not be able to do so
 
