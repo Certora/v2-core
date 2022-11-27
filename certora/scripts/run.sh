@@ -17,6 +17,7 @@ fi
 #             SmartVaultHarness:swapConnector=SwapConnectorMock \
 
 certoraRun  certora/harness/SmartVaultHarness.sol \
+            certora/harness/PriceOracleHarness.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
             packages/smart-vault/contracts/test/samples/WrappedNativeTokenMock.sol \
             packages/smart-vault/contracts/test/core/PriceOracleMock.sol \
@@ -27,9 +28,9 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
             packages/swap-connector/contracts/SwapConnector.sol \
 --verify SmartVaultHarness:certora/specs/SmartVault.spec \
 --link  SmartVaultHarness:wrappedNativeToken=WrappedNativeTokenMock \
-        SmartVaultHarness:priceOracle=PriceOracleMock \
+        SmartVaultHarness:priceOracle=PriceOracleHarness \
         SmartVaultHarness:swapConnector=SwapConnector \
---packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap \
+--packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap @chainlink=node_modules/@chainlink \
 --path . \
 --solc solc8.2 \
 --loop_iter 2 \
