@@ -8,10 +8,10 @@ then
     MSG=": $2"
 fi
 
-#             certora/harness/DummyERC20Impl.sol \
-#             certora/harness/DummyERC20A.sol \
-#             certora/harness/DummyERC20B.sol \
-#             certora/harness/DummyERC20FeeCollectorMock.sol \
+#             certora/harness/Tokens/DummyERC20Impl.sol \
+#             certora/harness/Tokens/DummyERC20A.sol \
+#             certora/harness/Tokens/DummyERC20B.sol \
+#             certora/harness/Tokens/DummyERC20FeeCollectorMock.sol \
 #             packages/smart-vault/contracts/test/core/StrategyMock.sol \
 # --link      SmartVaultHarness:feeCollector=DummyERC20FeeCollectorMock \
 #             SmartVaultHarness:swapConnector=SwapConnectorMock \

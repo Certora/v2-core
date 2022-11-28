@@ -65,9 +65,8 @@ methods {
     approve(address, uint256) => DISPATCHER(true)
     decimals() => DISPATCHER(true)
     WRToken.balanceOf(address) returns(uint256) envfree
-    // packages/smart-vault/contracts/test/samples/TokenMock.sol
-    mint(address, uint256) => DISPATCHER(true)
-    burn(address, uint256) => DISPATCHER(true)
+    //mint(uint256, address) => DISPATCHER(true)
+    //burn(uint256, address) => DISPATCHER(true)
 
 	// //
     // tokenA.balanceOf(address) envfree
@@ -135,7 +134,6 @@ methods {
     // the StrategyMock dispatchers caused the tool to TIMEOUT because of
     // incorrect calling in the SmartVault.sol
     // fixed the original code by changing "strategy." to "IStrategy(strategy)."
-
 
     implementationOf(address) returns (address) => DISPATCHER(true)
     implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
@@ -288,23 +286,23 @@ function matchMutualPrices(address base, address quote) returns bool {
  *                      MISC                      *
  **************************************************/
 
-//  rules for info and checking the ghost and tool
-
-//  sanity check that all functions are reachable - expecting to fail
-rule sanity(method f)
-    // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector}
-    // filtered {f->f.selector == exit(address,uint256,uint256,bytes).selector}
-    // filtered {f->f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector}
-    //             f.selector == withdraw(address,uint256,address,bytes).selector ||
-    //             f.selector == exit(address,uint256,uint256,bytes).selector ||
-    //             f.selector == call(address,bytes,uint256,bytes).selector ||
-    //             f.selector == unwrap(uint256,bytes).selector}
-    // filtered {f->f.selector != claim(address,bytes).selector}
-    // filtered {f->f.selector == join(address,address[],uint256[],uint256,bytes).selector}
-{
+rule sanity(method f) {
     env e;
     calldataarg args;
-    f(e,args);
+    f(e, args);
+    assert false;
+}
+
+rule exitSanity() {
+    env e;
+    calldataarg args;
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+    require amountsIn[0] > 0;
+    exit(e, strategy, tokensIn, amountsIn, slippage, data);
     assert false;
 }
 
@@ -633,7 +631,18 @@ rule getPriceMutuallyRevert(address base, address quote) {
 // the oracle prices for any pair.
 invariant tokensPriceReciprocity(address base, address quote)
      matchMutualPrices(base, quote)
-     filtered{f -> f.selector == join(address,address[],uint256[],uint256,bytes).selector}
+
+rule getPriceReciprocity(address base, address quote) {
+    requireInvariant tokensPriceReciprocity(base, quote);
+    matchDecimals(base, quote);
+    matchDecimals(quote, base);
+    // Just making things simpler...
+    // require oracle.getERC20Decimals(base) == 18;
+    // require oracle.getERC20Decimals(quote) == 12;
+
+    assert getPrice(base, quote)*getPrice(quote, base) ==
+       FixedPoint_ONE()*FixedPoint_ONE();
+}
 
 // Tests the prover's modeling of pow10(x) = 10**x
 rule pow10Integrity(uint256 x, uint256 y) {

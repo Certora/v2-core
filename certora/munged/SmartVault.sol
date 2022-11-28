@@ -217,7 +217,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
      * @dev Tells the last value accrued for a strategy. Note this value can be outdated.
      * @param strategy Address of the strategy querying the last value of
      */
-    function lastValue(address strategy) public view override returns (uint256) {
+    function lastValue(address strategy) public view virtual override returns (uint256) {
         return IStrategy(strategy).lastValue(address(this));
     }
 
@@ -330,6 +330,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
      */
     function claim(address strategy, bytes memory data)
         external
+        virtual
         override
         auth
         returns (address[] memory tokens, uint256[] memory amounts)
@@ -355,7 +356,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         uint256[] memory amountsIn,
         uint256 slippage,
         bytes memory data
-    ) external override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
+    ) external virtual override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         require(slippage <= FixedPoint.ONE, 'JOIN_SLIPPAGE_ABOVE_ONE');
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
@@ -384,7 +385,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         uint256[] memory amountsIn,
         uint256 slippage,
         bytes memory data
-    ) external override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
+    ) external virtual override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         require(investedValue[strategy] > 0, 'EXIT_NO_INVESTED_VALUE');
         require(slippage <= FixedPoint.ONE, 'EXIT_SLIPPAGE_ABOVE_ONE');
