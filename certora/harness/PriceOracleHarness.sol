@@ -38,4 +38,17 @@ contract PriceOracleHarness is PriceOracle {
         require(x <= 77);
         return 10**x;
     }
+
+    function uint32ToBytes4(uint32 x) public pure returns (bytes4) {
+        return bytes4(x);
+    }
+
+    function uint32Sol(uint256 x) public pure returns (uint32) {
+        require (x <= type(uint32).max);
+        return uint32(x);
+    }
+
+    function balanceOfToken(address token, address user) external view returns (uint256) {
+        return IERC20(token).balanceOf(user);
+    }
 }

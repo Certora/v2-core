@@ -30,6 +30,6 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --staging \
 --loop_iter 2 \
 --optimistic_loop \
---rule exitSanity \
+--rule withdrawTransferIntegrity \
 --settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=800 \
---msg "mimic SmartVault: exitSanity" 
+--msg "mimic SmartVault: withdrawTransferIntegrity" 

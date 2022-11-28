@@ -35,15 +35,6 @@ contract SmartVaultHarness is SmartVault {
         incentivesController = IAaveV2Token(reserveData.aTokenAddress).getIncentivesController();
     }
 
-    function uint32ToBytes4(uint32 x) public pure returns (bytes4) {
-        return bytes4(x);
-    }
-
-    function uint32Sol(uint256 x) public pure returns (uint32) {
-        require (x <= type(uint32).max);
-        return uint32(x);
-    }
-
     function join(
         address strategy,
         address[] memory tokensIn,

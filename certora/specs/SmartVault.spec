@@ -122,7 +122,6 @@ methods {
     // packages/smart-vault/contracts/test/core/StrategyMock.sol
     // token() => DISPATCHER(true)
     // valueRate() returns (uint256) => DISPATCHER(true)
-    lastValue(address) returns (uint256) 
     // lastValue(address) returns (uint256) => DISPATCHER(true) // causes error in rule sanity -> exit()
     // claim(bytes) returns (address[], uint256[]) => DISPATCHER(true) // works, but too slow
     //claim(bytes) returns (address[], uint256[]) 
@@ -143,15 +142,16 @@ methods {
     isAuthorized(address, bytes4) returns (bool) envfree
     getPriceFeed(address, address) returns (address) envfree
     getPrice(address, address) returns (uint256) envfree
-    uint32ToBytes4(uint32) returns (bytes4) envfree
-    uint32Sol(uint256) returns (uint32) envfree
     setSwapFee(uint256, uint256, address, uint256)
 
-    // Price oracle
+    // Price oracle & helpers
     oracle._getFeedData(address) returns (uint256, uint256) envfree
     oracle.getFeedDecimals(address) returns (uint256) envfree
     oracle.getERC20Decimals(address) returns (uint256) envfree
     oracle.pow10(uint256) returns (uint256) envfree
+    oracle.balanceOfToken(address, address) returns(uint256) envfree
+    oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
+    oracle.uint32Sol(uint256) returns (uint32) envfree
 }
 
 /**************************************************
@@ -260,8 +260,77 @@ function matchMutualPrices(address base, address quote) returns bool {
 /**************************************************
  *                METHOD INTEGRITY                *
  **************************************************/
- // Describe the integrity of a specific method
 
+rule collectTransferIntegrity(address token, address from, uint256 amount) {
+    env e;
+    bytes data;
+    address anyToken;
+    address anyUser;
+    require anyToken != token;
+    require anyUser != currentContract && anyUser != from;
+
+    uint256 fromBalance1 = oracle.balanceOfToken(token, from);
+    uint256 vaultBalance1 = oracle.balanceOfToken(token, currentContract);
+    uint256 fromBalanceAny1 = oracle.balanceOfToken(anyToken, from);
+    uint256 vaultBalanceAny1 = oracle.balanceOfToken(anyToken, currentContract);
+    uint256 anyUserBalance1 = oracle.balanceOfToken(token, anyUser);
+
+        collect(e, token, from, amount, data);
+
+    uint256 fromBalance2 = oracle.balanceOfToken(token, from);
+    uint256 vaultBalance2 = oracle.balanceOfToken(token, currentContract);
+    uint256 fromBalanceAny2 = oracle.balanceOfToken(anyToken, from);
+    uint256 vaultBalanceAny2 = oracle.balanceOfToken(anyToken, currentContract);
+    uint256 anyUserBalance2 = oracle.balanceOfToken(token, anyUser);
+
+    // One needs to take fees into account
+    if(from == currentContract) {
+        assert fromBalance1 == fromBalance2;
+    }
+    else {
+        assert fromBalance1 == fromBalance2 + amount;
+        assert vaultBalance2 == vaultBalance1 + amount;
+    }
+
+    assert fromBalanceAny1 == fromBalanceAny2;
+    assert vaultBalanceAny1 == vaultBalanceAny2;
+    assert anyUserBalance1 == anyUserBalance2;
+}
+
+rule withdrawTransferIntegrity(address token, address to, uint256 amount) {
+    env e;
+    bytes data;
+    address anyToken;
+    address anyUser;
+    require anyToken != token;
+    require anyUser != currentContract && anyUser != to;
+
+    uint256 toBalance1 = oracle.balanceOfToken(token, to);
+    uint256 vaultBalance1 = oracle.balanceOfToken(token, currentContract);
+    uint256 toBalanceAny1 = oracle.balanceOfToken(anyToken, to);
+    uint256 vaultBalanceAny1 = oracle.balanceOfToken(anyToken, currentContract);
+    uint256 anyUserBalance1 = oracle.balanceOfToken(token, anyUser);
+
+        withdraw(e, token, amount, to, data);
+
+    uint256 toBalance2 = oracle.balanceOfToken(token, to);
+    uint256 vaultBalance2 = oracle.balanceOfToken(token, currentContract);
+    uint256 toBalanceAny2 = oracle.balanceOfToken(anyToken, to);
+    uint256 vaultBalanceAny2 = oracle.balanceOfToken(anyToken, currentContract);
+    uint256 anyUserBalance2 = oracle.balanceOfToken(token, anyUser);
+
+    if(to == currentContract) {
+        assert toBalance2 == toBalance1;
+    }
+    else {
+        assert toBalance2 == toBalance1 + amount;
+        assert vaultBalance1 == vaultBalance2 + amount;
+    }
+    
+    assert toBalanceAny1 == toBalanceAny2;
+    assert vaultBalanceAny1 == vaultBalanceAny2;
+    assert anyUserBalance1 == anyUserBalance2;
+}
 
 
 /**************************************************
@@ -475,7 +544,7 @@ rule testGhostAuthorization() {
     address base;
     address quote;
     address feed;
-    singleAddressAuthorization(e1.msg.sender, uint32ToBytes4(select_setPriceFeed()));
+    singleAddressAuthorization(e1.msg.sender, oracle.uint32ToBytes4(select_setPriceFeed()));
     setPriceFeed(e1, base, quote, feed);
     setPriceFeed(e2, base, quote, feed);
     assert e1.msg.sender == e2.msg.sender;
@@ -495,7 +564,7 @@ filtered {f -> !f.isView && !f.isFallback} {
 
     // setup - only e1.msg.sender is authorized to run any function:
     singleAddressGetsTotalControl(e1.msg.sender);
-    //singleAddressAuthorization(e1.msg.sender, uint32ToBytes4(select_setPriceFeeds()));
+    //singleAddressAuthorization(e1.msg.sender, oracle.uint32ToBytes4(select_setPriceFeeds()));
 
     // another user (e2.msg.sender) tries to call any function
     require e1.msg.sender != e2.msg.sender;
@@ -515,8 +584,8 @@ rule uniqueAddressChangesPriceFeed(method f) {
     address feed0 = getPriceFeed(base, quote);
 
     // Set a single authorized address to set price feed.
-    singleAddressAuthorization(priceFeedAuthorized, uint32ToBytes4(select_setPriceFeed()));
-    require ghostAuthorized[priceFeedAuthorized][uint32ToBytes4(select_setPriceFeed())];
+    singleAddressAuthorization(priceFeedAuthorized, oracle.uint32ToBytes4(select_setPriceFeed()));
+    require ghostAuthorized[priceFeedAuthorized][oracle.uint32ToBytes4(select_setPriceFeed())];
     require priceFeedAuthorized != e.msg.sender;
     f(e, args);
 
@@ -526,7 +595,8 @@ rule uniqueAddressChangesPriceFeed(method f) {
 }
 
 rule uniquenessOfAuthorization(method f, method g) 
-filtered{f -> !f.isView, g -> !g.isView} {
+filtered{f -> (!f.isView && f.selector != authorize(address,bytes4).selector)
+,g -> !g.isView} {
 //filtered{f -> f.selector == setPriceFeed(address, address, address).selector,
 //g -> g.selector == setSwapFee(uint256, uint256, address, uint256).selector}{
     env ef;
@@ -534,8 +604,8 @@ filtered{f -> !f.isView, g -> !g.isView} {
     calldataarg args_f;
     calldataarg args_g;
     // Unique address authorization for the called methods.
-    singleAddressAuthorization(ef.msg.sender, uint32ToBytes4(f.selector));
-    singleAddressAuthorization(eg.msg.sender, uint32ToBytes4(g.selector));
+    singleAddressAuthorization(ef.msg.sender, oracle.uint32ToBytes4(f.selector));
+    singleAddressAuthorization(eg.msg.sender, oracle.uint32ToBytes4(g.selector));
     bool authorized_G = ghostAuthorized[eg.msg.sender][g.selector];
 
     // Call f, g
@@ -582,7 +652,7 @@ rule unwrapCannotRevertAfterWrap(uint256 amount) {
     bytes data;
     uint256 amountToUnwrap;
     require amountToUnwrap > 0;
-    require isAuthorized(e.msg.sender, uint32ToBytes4(select_unwrap()));
+    require isAuthorized(e.msg.sender, oracle.uint32ToBytes4(select_unwrap()));
     uint256 wrappedAmount = wrap(e, amount, data);
     unwrap@withrevert(e, amountToUnwrap, data);
     
@@ -594,7 +664,7 @@ rule wrapCannotRevertAfterUnwrap(uint256 amount) {
     bytes data;
     uint256 amountToWrap;
     require amountToWrap > 0;
-    require isAuthorized(e.msg.sender, uint32ToBytes4(select_wrap()));
+    require isAuthorized(e.msg.sender, oracle.uint32ToBytes4(select_wrap()));
     uint256 unwrappedAmount = unwrap(e, amount, data);
     wrap@withrevert(e, amountToWrap, data);
     
