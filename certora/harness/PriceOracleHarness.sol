@@ -34,6 +34,10 @@ contract PriceOracleHarness is PriceOracle {
         return IERC20Metadata(token).decimals();
     }
 
+    function getERC20Allowance(address token, address owner, address spender) public view returns (uint256) {
+        return IERC20(token).allowance(owner, spender);
+    }
+
     function pow10(uint256 x) public pure returns (uint256) {
         require(x <= 77);
         return 10**x;

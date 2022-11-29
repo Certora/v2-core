@@ -30,6 +30,6 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --staging \
 --loop_iter 2 \
 --optimistic_loop \
---rule pricesEqualZeroMutually \
+--rule whoChangedSmartVaultAllowance \
 --settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=800 \
---msg "mimic SmartVault: pricesEqualZeroMutually realistic decs" 
+--msg "mimic SmartVault: whoChangedSmartVaultAllowance" 

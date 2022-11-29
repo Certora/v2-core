@@ -37,8 +37,9 @@
 // 9.   Swap connector should decrease the balanceOf(TokenOut)
 //      and increase the balanceOf(TokenIn)
 
-
-
+////////////////////////////////////////
+// ERC20 methods
+import "./erc20.spec"
 /**************************************************
  *                LINKED CONTRACTS                *
  **************************************************/
@@ -59,14 +60,9 @@ methods {
 
     ////////////////////////////////////////
 	// ERC20 methods
-	transferFrom(address, address, uint256) => DISPATCHER(true)
-	transfer(address, uint256) => DISPATCHER(true)
-    balanceOf(address) => DISPATCHER(true)
-    approve(address, uint256) => DISPATCHER(true)
-    decimals() => DISPATCHER(true)
     WRToken.balanceOf(address) returns(uint256) envfree
-    //mint(uint256, address) => DISPATCHER(true)
-    //burn(uint256, address) => DISPATCHER(true)
+    mint(address, uint256) => DISPATCHER(true)
+    burn(address, uint256) => DISPATCHER(true)
 
 	// //
     // tokenA.balanceOf(address) envfree
@@ -152,6 +148,7 @@ methods {
     oracle.balanceOfToken(address, address) returns(uint256) envfree
     oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
     oracle.uint32Sol(uint256) returns (uint32) envfree
+    oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
 }
 
 /**************************************************
@@ -543,6 +540,21 @@ rule whoChangedInvestedValue(method f)
     require strategy1investedValue == investedValue(strategy1);
 
     assert (strategy0 == strategy1) => (strategy0investedValue == strategy1investedValue);
+}
+
+rule whoChangedSmartVaultAllowance(method f) {
+    address token;
+    address owner = currentContract;
+    address spender;
+    require spender != owner;
+
+    env e;
+    calldataarg args;
+    uint256 allowanceBefore = oracle.getERC20Allowance(token, owner, spender);
+        f(e, args);
+    uint256 allowanceAfter = oracle.getERC20Allowance(token, owner, spender);
+
+    assert allowanceBefore == allowanceAfter;
 }
 
 
