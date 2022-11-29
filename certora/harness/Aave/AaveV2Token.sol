@@ -20,9 +20,9 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '../../../packages/strategies/contracts/aave-v2/IAaveV2IncentivesController.sol';
 
 interface IAToken {
-    function mint(uint256 amount, address onBehalfOf) external;
+    function mint(address onBehalfOf, uint256 amount) external;
 
-    function burn(uint256 amount, address onBehalfOf) external;
+    function burn(address from, uint256 amount) external;
 }
 
 contract AaveV2Token is ERC20, IAToken {
@@ -57,15 +57,11 @@ contract AaveV2Token is ERC20, IAToken {
         return incentivesController;
     }
 
-    function mint(uint256 amount, address onBehalfOf) onlyPool override external {
-        _totalSupply += amount;
-        _balances[onBehalfOf] += amount;
+    function mint(address account, uint256 amount) onlyPool override external {
+        _mint(account, amount);
     }
 
-    function burn(uint256 amount, address from) onlyPool override external {
-        require(_totalSupply >= amount);
-        _totalSupply -= amount;
-        _balances[from] -= amount;
-    }  
-
+    function burn(address account, uint256 amount) onlyPool override external {
+        _burn(account, amount);
+    }
 }

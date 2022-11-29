@@ -24,7 +24,7 @@ contract lendingPool is IAaveV2Pool {
         
         address aToken = reserveData[asset].aTokenAddress;
         IERC20(asset).transferFrom(msg.sender, aToken, amount);
-        IAToken(aToken).mint(amount, onBehalfOf);
+        IAToken(aToken).mint(onBehalfOf, amount);
     }
 
     /**
@@ -42,7 +42,7 @@ contract lendingPool is IAaveV2Pool {
 
         address aToken = reserveData[asset].aTokenAddress;
         IERC20(asset).transferFrom(aToken, to, amount);
-        IAToken(aToken).burn(amount, msg.sender);
+        IAToken(aToken).burn(msg.sender, amount);
 
         return amount;
     }
