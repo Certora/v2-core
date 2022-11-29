@@ -30,6 +30,6 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --staging \
 --loop_iter 2 \
 --optimistic_loop \
---rule withdrawTransferIntegrity \
+--rule pricesEqualZeroMutually \
 --settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=800 \
---msg "mimic SmartVault: withdrawTransferIntegrity" 
+--msg "mimic SmartVault: pricesEqualZeroMutually realistic decs" 

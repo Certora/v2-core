@@ -219,7 +219,8 @@ function singleAddressGetsTotalControl(address who) {
 }
 
 // Realistic value for the decimals (4<=dec<=27)
-function requireValidDecimals(uint256 decimals) {
+function requireValidDecimals(address token) {
+    uint256 decimals = oracle.getERC20Decimals(token);
     require decimals >=4 && decimals <= 27;
 }
 
@@ -228,6 +229,13 @@ function requireValidDecimals(uint256 decimals) {
 function matchDecimals(address base, address quote) {
     require oracle.getFeedDecimals(getPriceFeed(base, quote)) == 
         oracle.getERC20Decimals(quote);
+}
+
+function getFeedPrice(address base, address quote) returns uint256 {
+    uint256 price;
+    uint256 decimal;
+    price, decimal = oracle._getFeedData(getPriceFeed(base, quote));
+    return price;
 }
 
 // Condition to match mutual prices from chainlink price oracle
@@ -563,8 +571,8 @@ filtered {f -> !f.isView && !f.isFallback} {
     calldataarg args;
 
     // setup - only e1.msg.sender is authorized to run any function:
-    singleAddressGetsTotalControl(e1.msg.sender);
-    //singleAddressAuthorization(e1.msg.sender, oracle.uint32ToBytes4(select_setPriceFeeds()));
+    //singleAddressGetsTotalControl(e1.msg.sender);
+    singleAddressAuthorization(e1.msg.sender, oracle.uint32ToBytes4(select_setPriceFeeds()));
 
     // another user (e2.msg.sender) tries to call any function
     require e1.msg.sender != e2.msg.sender;
@@ -712,6 +720,24 @@ rule getPriceReciprocity(address base, address quote) {
 
     assert getPrice(base, quote)*getPrice(quote, base) ==
        FixedPoint_ONE()*FixedPoint_ONE();
+}
+
+// The prices of two tokens is zero iff the reciprocal price is also zero.
+// (More precisely they can't be zero together, unless something is not define
+// in the chain-link oracle)
+rule pricesEqualZeroMutually(address base, address quote) {
+    requireInvariant tokensPriceReciprocity(base, quote);
+    matchDecimals(base, quote);
+    matchDecimals(quote, base);
+
+    // Additional assumptions for a more realistic scope
+    require getFeedPrice(base, quote) >= 100000;
+    require getFeedPrice(quote, base) >= 100000;
+    requireValidDecimals(quote);
+    requireValidDecimals(base);
+    //
+
+    assert getPrice(base, quote) == 0 <=> getPrice(quote, base) == 0;
 }
 
 // Tests the prover's modeling of pow10(x) = 10**x
