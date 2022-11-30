@@ -114,6 +114,9 @@ contract SmartVaultHarness is SmartVault {
         emit Claim(strategy, tokens, amounts, data);
     }
 
+    function paySwapFee(address token, uint256 amount) external returns (uint256 paidAmount) {
+        return _payFee(token, amount, swapFee);
+    }
         
     /**
      * @dev Tokens accepted to join the strategy

@@ -1,0 +1,11 @@
+certoraRun ./packages/registry/contracts/registry/Registry.sol \
+--verify Registry:certora/specs/Registry.spec \
+--solc solc8.2 \
+--loop_iter 2 \
+--optimistic_loop \
+--packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
+--path . \
+--staging \
+--settings -dynamicCreationBound=2,-optimisticFallback=true \
+--send_only \
+--msg "mimic Registry" 
