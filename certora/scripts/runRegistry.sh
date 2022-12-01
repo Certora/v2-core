@@ -6,6 +6,7 @@ certoraRun ./packages/registry/contracts/registry/Registry.sol \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
 --path . \
 --staging \
+--rule_sanity \
 --settings -dynamicCreationBound=2,-optimisticFallback=true \
 --send_only \
 --msg "mimic Registry" 

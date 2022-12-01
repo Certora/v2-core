@@ -4,6 +4,7 @@ methods {
     clone(address, bytes) returns (address) envfree
     register(bytes32, address, bool)
     deprecate(address)
+    isAuthorized(address, bytes4) returns (bool) envfree
 }
 
 rule sanity(method f) {
@@ -11,6 +12,67 @@ rule sanity(method f) {
     calldataarg args;
     f(e, args);
     assert false;
+}
+
+rule onlyCloneChangesInstanceImplementation(address instance, method f) {
+    env e;
+    calldataarg args;
+    address implementation1 = implementationOf(instance);
+        f(e, args);
+    address implementation2 = implementationOf(instance);
+    
+    assert implementation2 != implementation1 => f.selector == clone(address, bytes).selector;
+}
+
+rule cloneIntegrity(address implementation) {
+    bytes data;
+    address otherInstance;
+    address otherImplementation1 = implementationOf(otherInstance);
+    address clonedInstance = clone(implementation, data);
+    address otherImplementation2 = implementationOf(otherInstance);
+    
+    assert implementation == implementationOf(clonedInstance);
+    assert clonedInstance != otherInstance => otherImplementation2 == otherImplementation1;
+}
+
+rule instanceImplemenationIsPreserved(address instance) {
+    calldataarg args;
+    
+    address implementation = implementationOf(instance);
+    require implementation !=0;
+
+    address clonedInstance = clone(args);
+    // Here we assume that the 'create' function cannot yield the same cloned address.
+    require clonedInstance != instance;
+
+    assert implementationOf(instance) == implementation;
+}
+
+rule ImplDataModifiedOnlyOnce(address implementation, method f, method g)
+filtered{f -> !f.isView, g -> !g.isView} {
+    env e1; env e2;
+    calldataarg args1;
+    calldataarg args2;
+    bool statelessA; bool statelessB; bool statelessC;
+    bool deprecatedA; bool deprecatedB; bool deprecatedC;
+    bytes32 namespaceA; bytes32 namespaceB; bytes32 namespaceC;
+
+    statelessA, deprecatedA, namespaceA = implementationData(implementation);
+        f(e1, args1);
+    statelessB, deprecatedB, namespaceB = implementationData(implementation);
+        g(e2, args2);
+    statelessC, deprecatedC, namespaceC = implementationData(implementation);
+
+    // This is the post-constructor state:
+    require !deprecatedA;
+    require !statelessA;
+
+    // Deprecate changes only once
+    assert (deprecatedA != deprecatedB) => (deprecatedB == deprecatedC);
+    // If deprecate is changed, it will stay 'true' always.
+    assert (deprecatedA != deprecatedB) => deprecatedB;
+    // Stateless changes only once.
+    assert (statelessA != statelessB) => (statelessB == statelessC);
 }
  
 rule cloneIsNotImplementation(address implementation) {
@@ -62,6 +124,8 @@ rule cannotDeprecateTwice(address implementation) {
     assert lastReverted;
 }
 
+// This rule fails (even for view functions!) because the low-level call
+// inside 'clone' is non-determinstic with respect to storage and input.
 rule frontRunning_clone(address impl, method f) {
     env e;
     calldataarg args;
@@ -77,7 +141,7 @@ rule frontRunning_clone(address impl, method f) {
 }
 
 rule frontRunning_deprecate(address impl, method f) 
-filtered{f -> f.selecotr != deprecate(address).selector} {
+filtered{f -> f.selector != deprecate(address).selector} {
     env e1; env e2;
     calldataarg args;
     storage initStorage = lastStorage;
@@ -85,6 +149,20 @@ filtered{f -> f.selecotr != deprecate(address).selector} {
 
     f(e2, args) at initStorage;
     deprecate@withrevert(e1, impl);
+
+    assert !lastReverted;
+}
+
+rule frontRunning_register(address instance, method f) {
+    env e1; env e2;
+    calldataarg args;
+    bytes32 namespace;
+    bool stateless;
+    storage initStorage = lastStorage;
+    register(e1, namespace, instance, stateless);
+    
+    f(e2, args) at initStorage;
+    register@withrevert(e1, namespace, instance, stateless);
 
     assert !lastReverted;
 }
