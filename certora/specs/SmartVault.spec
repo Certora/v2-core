@@ -37,6 +37,13 @@
 // 9.   Swap connector should decrease the balanceOf(TokenOut)
 //      and increase the balanceOf(TokenIn)
 
+//10.   The call() function if authorized can call ***ANY*** contract
+//      unlike the strategies / swap connector / oracles whose addresses have to be registered
+//      in the registry thus offering some protection, the call() is unlimited
+//      and potentially very dangerous
+//      Suggestion: to add a check that the called contract is also in the registry
+
+
 ////////////////////////////////////////
 // ERC20 methods
 import "./erc20.spec"
@@ -735,7 +742,7 @@ rule getPriceReciprocity(address base, address quote) {
 }
 
 // The prices of two tokens is zero iff the reciprocal price is also zero.
-// (More precisely they can't be zero together, unless something is not define
+// (More precisely they can't be zero together, unless something is not defined
 // in the chain-link oracle)
 rule pricesEqualZeroMutually(address base, address quote) {
     requireInvariant tokensPriceReciprocity(base, quote);
@@ -750,6 +757,8 @@ rule pricesEqualZeroMutually(address base, address quote) {
     //
 
     assert getPrice(base, quote) == 0 <=> getPrice(quote, base) == 0;
+
+    //assert getPrice(base, quote) != 0;  // this checks that returned price cannot be zero
 }
 
 // Tests the prover's modeling of pow10(x) = 10**x
