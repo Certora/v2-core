@@ -5,6 +5,8 @@ import '../munged/PriceOracle.sol';
 import '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 contract PriceOracleHarness is PriceOracle {
+    using FixedPoint for uint256;
+
     constructor(address _pivot, address _registry) PriceOracle(_pivot, _registry) {}
 
     mapping(address => uint256) private oracleDecimals;
@@ -50,6 +52,10 @@ contract PriceOracleHarness is PriceOracle {
     function uint32Sol(uint256 x) public pure returns (uint32) {
         require (x <= type(uint32).max);
         return uint32(x);
+    }
+
+    function mulDownFP(uint256 x, uint256 y) public pure returns (uint256) {
+        return x.mulDown(y);
     }
 
     function balanceOfToken(address token, address user) external view returns (uint256) {

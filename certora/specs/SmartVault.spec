@@ -63,6 +63,8 @@ methods {
     oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
     oracle.uint32Sol(uint256) returns (uint32) envfree
     oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
+    oracle.mulDownFP(uint256, uint256) returns (uint256) envfree
+    oracle.pivot() returns(address) envfree
 }
 
 /**************************************************
@@ -159,6 +161,15 @@ function matchMutualPrices(address base, address quote) returns bool {
     price1, dec1 = oracle._getFeedData(feed1);
     price2, dec2 = oracle._getFeedData(feed2);
     return (price1 * price2 == oracle.pow10(dec1 + dec2));
+}
+
+// Forces the price feed provider to go through the pivot feed for
+// a pair of tokens base, quote
+function usePivotForPair(address base, address quote) {
+    address pivot = oracle.pivot();
+    require pivot != base && pivot != quote &&
+    getPriceFeed(base, quote) == 0 && getPriceFeed(quote, base) == 0 &&
+    getPriceFeed(base, pivot) != 0 && getPriceFeed(quote, pivot) != 0;
 }
 
 /**************************************************
@@ -436,19 +447,31 @@ rule getPriceMutuallyRevert(address base, address quote) {
 invariant tokensPriceReciprocity(address base, address quote)
      matchMutualPrices(base, quote)
 
+rule feedDecimalsCannotChange(method f, address feed) 
+filtered{f -> f.selector != setPriceFeed(address,address,address).selector} 
+{
+    env e;
+    calldataarg args;
+    uint256 decBefore = oracle.getFeedDecimals(feed); 
+        f(e, args);
+    uint256 decAfter = oracle.getFeedDecimals(feed); 
+
+    assert decBefore == decAfter;
+}
+
+
 rule getPriceReciprocity(address base, address quote) {
     requireInvariant tokensPriceReciprocity(base, quote);
     matchDecimals(base, quote);
     matchDecimals(quote, base);
     // Just making things simpler...
-    // require oracle.getERC20Decimals(base) == 18;
-    // require oracle.getERC20Decimals(quote) == 12;
-
-    assert getPrice(base, quote)*getPrice(quote, base) ==
-       FixedPoint_ONE()*FixedPoint_ONE();
+    requireValidDecimals(quote);
+    requireValidDecimals(base);
+    
+    assert oracle.mulDownFP(getPrice(quote, base), getPrice(base, quote)) == FixedPoint_ONE();
 }
 
-// The prices of two tokens is zero iff the reciprocal price is also zero.
+// The price of two tokens is zero iff the reciprocal price is also zero.
 // (More precisely they can't be zero together, unless something is not defined
 // in the chain-link oracle)
 rule pricesEqualZeroMutually(address base, address quote) {
@@ -461,11 +484,45 @@ rule pricesEqualZeroMutually(address base, address quote) {
     require getFeedPrice(quote, base) >= 100000;
     requireValidDecimals(quote);
     requireValidDecimals(base);
-    //
 
     assert getPrice(base, quote) == 0 <=> getPrice(quote, base) == 0;
 
-    //assert getPrice(base, quote) != 0;  // this checks that returned price cannot be zero
+    // this checks that returned price cannot be zero
+    //assert getPrice(base, quote) != 0;  
+}
+
+// Fails
+rule pivotUnitPrice(address base, address quote) {
+    usePivotForPair(base, quote);
+    address pivot = oracle.pivot();
+
+    // View prices from feed
+    uint256 priceBase = getFeedPrice(base, pivot);
+    uint256 priceQuote = getFeedPrice(quote, pivot);
+    
+    assert 
+    (getPrice(base, pivot) == FixedPoint_ONE() &&
+    getPrice(quote, pivot) == FixedPoint_ONE()) =>
+    getPrice(base, quote) == FixedPoint_ONE();
+}
+
+// Relaxed version (1%) of pivotUnitPrice rule
+// Also fails.
+rule pivotUnitPriceRelaxed(address base, address quote) {
+    usePivotForPair(base, quote);
+    address pivot = oracle.pivot();
+
+    // View prices from feed
+    uint256 priceBase = getFeedPrice(base, pivot);
+    uint256 priceQuote = getFeedPrice(quote, pivot);
+    uint256 pairPrice = getPrice(base, quote);
+    
+    assert 
+    (getPrice(base, pivot) == FixedPoint_ONE() &&
+    getPrice(quote, pivot) == FixedPoint_ONE()) 
+    =>
+    (pairPrice >= (FixedPoint_ONE()*99) / 100 &&
+    pairPrice <= (FixedPoint_ONE()*101) / 100);
 }
 
 // Tests the prover's modeling of pow10(x) = 10**x
