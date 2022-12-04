@@ -448,7 +448,7 @@ invariant tokensPriceReciprocity(address base, address quote)
      matchMutualPrices(base, quote)
 
 rule feedDecimalsCannotChange(method f, address feed) 
-filtered{f -> f.selector != setPriceFeed(address,address,address).selector} 
+filtered{f -> !f.isView && f.selector != setPriceFeed(address,address,address).selector} 
 {
     env e;
     calldataarg args;
@@ -499,6 +499,10 @@ rule pivotUnitPrice(address base, address quote) {
     // View prices from feed
     uint256 priceBase = getFeedPrice(base, pivot);
     uint256 priceQuote = getFeedPrice(quote, pivot);
+
+    requireValidDecimals(pivot);
+    matchDecimals(base, pivot);
+    matchDecimals(quote, pivot);
     
     assert 
     (getPrice(base, pivot) == FixedPoint_ONE() &&
@@ -516,6 +520,10 @@ rule pivotUnitPriceRelaxed(address base, address quote) {
     uint256 priceBase = getFeedPrice(base, pivot);
     uint256 priceQuote = getFeedPrice(quote, pivot);
     uint256 pairPrice = getPrice(base, quote);
+
+    //requireValidDecimals(pivot);
+    matchDecimals(base, pivot);
+    matchDecimals(quote, pivot);
     
     assert 
     (getPrice(base, pivot) == FixedPoint_ONE() &&
