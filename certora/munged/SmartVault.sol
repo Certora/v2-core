@@ -482,7 +482,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
      * @param fee Fee configuration to be applied
      * @return paidAmount Amount of fees paid to the fee collector
      */
-    function _payFee(address token, uint256 amount, Fee storage fee) internal returns (uint256 paidAmount) {
+    function _payFee(address token, uint256 amount, Fee memory fee) internal returns (uint256 paidAmount) {     // HARNESS: storage -> memory
         // Fee amounts are always rounded down
         uint256 feeAmount = amount.mulDown(fee.pct);
 
