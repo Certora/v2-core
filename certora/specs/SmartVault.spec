@@ -316,8 +316,8 @@ filtered {f -> !f.isView && !f.isFallback} {
     calldataarg args;
 
     // setup - only e1.msg.sender is authorized to run any function:
-    //singleAddressGetsTotalControl(e1.msg.sender);
-    singleAddressAuthorization(e1.msg.sender, oracle.uint32ToBytes4(select_setPriceFeeds()));
+    singleAddressGetsTotalControl(e1.msg.sender);
+    //singleAddressAuthorization(e1.msg.sender, oracle.uint32ToBytes4(select_setPriceFeeds()));
 
     // another user (e2.msg.sender) tries to call any function
     require e1.msg.sender != e2.msg.sender;
