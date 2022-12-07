@@ -270,24 +270,37 @@ rule swapIntergrity(env e, env e2, method f) {
     require tokenIn == ERC20A;
     require tokenOut == ERC20B;
 
-    uint256 balanceOutBefore = ERC20B.balanceOf(e, currentContract);
-    uint256 balanceFCBefore = ERC20B.balanceOf(e, feeCollector());
+    uint256 balanceInDexBefore = ERC20A.balanceOf(e, Dex);
+    uint256 balanceInSmartWaltBefore = ERC20A.balanceOf(e, currentContract);
 
-    // require e2.msg.sender != currentContract;
+    uint256 balanceOutDexBefore = ERC20B.balanceOf(e, Dex);
+    uint256 balanceOutSmartWaltBefore = ERC20B.balanceOf(e, currentContract);
+
+    uint256 balanceFCBefore = ERC20B.balanceOf(e, feeCollector());
 
     storage initialState = lastStorage;
 
     uint256 amountOut = swap(e2, tokenIn, tokenOut, amountIn, limitType, limitAmount, data);
 
-    uint256 balanceOutAfter = ERC20B.balanceOf(e, currentContract);
+    uint256 balanceInDexAfter = ERC20A.balanceOf(e, Dex);
+    uint256 balanceInSmartWaltAfter = ERC20A.balanceOf(e, currentContract);
+
+    uint256 balanceOutDexAfter = ERC20B.balanceOf(e, Dex);
+    uint256 balanceOutSmartWaltAfter = ERC20B.balanceOf(e, currentContract);
+
     uint256 balanceFCAfter = ERC20B.balanceOf(e, feeCollector());
-    uint256 amountOutBeforeFees = balanceOutAfter - balanceOutBefore;
+
+    uint256 amountOutBeforeFees = balanceOutSmartWaltAfter - balanceOutSmartWaltBefore;
 
     // roll back to initial state to calculate fees to check their correctness
-    uint256 paidFees = payFee(e, tokenOut, amountOutBeforeFees, fee) at initialState;
+    uint256 paidFees = payFee(e, tokenOut, amountOutBeforeFees) at initialState;
 
+    assert balanceInDexAfter - balanceInDexBefore == amountIn, "Dex balance should be increased by amountIn";
+    assert balanceInSmartWaltBefore - balanceInSmartWaltAfter == amountIn, "SmartVault balance should be decreased by amountIn";
 
+    assert balanceOutDexBefore - balanceOutDexAfter == amountOut, "Dex balance should be decreased by amountOut";
+    assert balanceOutSmartWaltAfter - balanceOutSmartWaltBefore == amountOut, "SmartVault balance should be increased by amountOut";
 
-    assert balanceOutAfter - balanceOutBefore < amountOut;
-    assert balanceFCAfter - balanceFCBefore == paidFees, "Remember, with great power comes great responsibility.";
+    // assert balanceOutSmartWaltAfter - balanceOutSmartWaltBefore >= amountOut;
+    // assert balanceFCAfter - balanceFCBefore == paidFees, "Remember, with great power comes great responsibility.";
 }
