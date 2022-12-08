@@ -92,27 +92,27 @@ contract SmartVaultHarnessSwap is SmartVault {
         return _payFee(token, amount, swapFee);
     }
 
-    function getSwapFeePct() external returns (uint256) {
+    function getSwapFeePct() view external returns (uint256) {
         return swapFee.pct;
     }
 
-    function getSwapFeeCap() external returns (uint256) {
+    function getSwapFeeCap() view external returns (uint256) {
         return swapFee.cap;
     }
 
-    function getSwapFeeToken() external returns (address) {
+    function getSwapFeeToken() view external returns (address) {
         return swapFee.token;
     }
 
-    function getSwapFeePeriod() external returns (uint256) {
+    function getSwapFeePeriod() view external returns (uint256) {
         return swapFee.period;
     }
 
-    function getSwapFeeTotalCharged() external returns (uint256) {
+    function getSwapFeeTotalCharged() view external returns (uint256) {
         return swapFee.totalCharged;
     }
 
-    function getSwapFeeNextResetTime() external returns (uint256) {
+    function getSwapFeeNextResetTime() view external returns (uint256) {
         return swapFee.nextResetTime;
     }
 }
