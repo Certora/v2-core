@@ -156,16 +156,6 @@ rule swapIntergrityTokenIn(env e, env e2, method f) {
     uint256 limitAmount;
     bytes data;
 
-    // other parameters
-    SmartVault.Fee fee;
-
-    require fee.pct == getSwapFeePct()
-            && fee.cap == getSwapFeeCap()
-            && fee.token == getSwapFeeToken()
-            && fee.period == getSwapFeePeriod()
-            && fee.totalCharged == getSwapFeeTotalCharged()
-            && fee.nextResetTime == getSwapFeeNextResetTime();
-
     require tokenIn == ERC20A;
     require tokenOut == ERC20B;
 
@@ -212,4 +202,56 @@ rule swapIntergrityOthersUntouchable(env e, env e2, method f) {
 
     assert balanceInAddrBefore == balanceInAddrAfter, "Random address balance should not be changed (tokenIn)";
     assert balanceOutAddrBefore == balanceOutAddrAfter, "Random address balance should not be changed (tokenOut)";
+}
+
+
+rule swapConsistencyTokenIn(env e, env e2, method f) {
+    address tokenIn;
+    address tokenOut;
+    uint256 amountIn;
+    uint8 limitType;
+    uint256 limitAmount;
+    bytes data;
+
+    require tokenIn == ERC20A;
+    require tokenOut == ERC20B;
+    require feeCollector() != Dex && feeCollector() != currentContract;
+
+    uint256 balanceInDexBefore = ERC20A.balanceOf(e, Dex);
+    uint256 balanceInSmartWaltBefore = ERC20A.balanceOf(e, currentContract);
+    uint256 balanceFCBefore = ERC20A.balanceOf(e, feeCollector());
+
+    uint256 amountOut = swap(e2, tokenIn, tokenOut, amountIn, limitType, limitAmount, data);
+
+    uint256 balanceInDexAfter = ERC20A.balanceOf(e, Dex);
+    uint256 balanceInSmartWaltAfter = ERC20A.balanceOf(e, currentContract);
+    uint256 balanceFCAfter = ERC20A.balanceOf(e, feeCollector());
+
+    assert balanceInDexBefore + balanceInSmartWaltBefore + balanceFCBefore == balanceInDexAfter + balanceInSmartWaltAfter + balanceFCAfter;
+}
+
+
+rule swapConsistencyTokenOut(env e, env e2, method f) {
+    address tokenIn;
+    address tokenOut;
+    uint256 amountIn;
+    uint8 limitType;
+    uint256 limitAmount;
+    bytes data;
+
+    require tokenIn == ERC20A;
+    require tokenOut == ERC20B;
+    require feeCollector() != Dex && feeCollector() != currentContract;
+
+    uint256 balanceInDexBefore = ERC20B.balanceOf(e, Dex);
+    uint256 balanceInSmartWaltBefore = ERC20B.balanceOf(e, currentContract);
+    uint256 balanceFCBefore = ERC20B.balanceOf(e, feeCollector());
+
+    uint256 amountOut = swap(e2, tokenIn, tokenOut, amountIn, limitType, limitAmount, data);
+
+    uint256 balanceInDexAfter = ERC20B.balanceOf(e, Dex);
+    uint256 balanceInSmartWaltAfter = ERC20B.balanceOf(e, currentContract);
+    uint256 balanceFCAfter = ERC20B.balanceOf(e, feeCollector());
+
+    assert balanceInDexBefore + balanceInSmartWaltBefore + balanceFCBefore == balanceInDexAfter + balanceInSmartWaltAfter + balanceFCAfter;
 }
