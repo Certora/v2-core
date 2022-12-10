@@ -96,17 +96,6 @@ rule swapIntergrity(env e, env e2, method f) {
     uint8 limitType;
     uint256 limitAmount;
     bytes data;
-
-    /* other parameters
-   SmartVault.Fee fee = myFee();
-
-    require fee.pct == getSwapFeePct()
-            && fee.cap == getSwapFeeCap()
-            && fee.token == getSwapFeeToken()
-            && fee.period == getSwapFeePeriod()
-            && fee.totalCharged == getSwapFeeTotalCharged()
-            && fee.nextResetTime == getSwapFeeNextResetTime();
-    */
      
     require feeCollector() == FeeCollector;
     require tokenIn == ERC20A;
@@ -205,6 +194,7 @@ rule swapIntergrityOthersUntouchable(env e, env e2, method f) {
 }
 
 
+// STATUS - verified
 rule swapConsistencyTokenIn(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
@@ -231,6 +221,7 @@ rule swapConsistencyTokenIn(env e, env e2, method f) {
 }
 
 
+// STATUS - verified
 rule swapConsistencyTokenOut(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
