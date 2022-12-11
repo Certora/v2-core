@@ -49,3 +49,10 @@ certora*.txt
 
 *.png
 *.gv
+certora/misc/flatAaveV2Strategy.sol
+certora/misc/flatCompoundStrategy.sol
+certora/misc/flatPriceFeedProvider.sol
+certora/misc/flatPriceOracle.sol
+certora/misc/flatRegistry.sol
+certora/misc/flatSmartVault.sol
+certora/misc/flatSwapConnector.sol
