@@ -488,7 +488,7 @@ rule pricesEqualZeroMutually(address base, address quote) {
     assert getPrice(base, quote) == 0 <=> getPrice(quote, base) == 0;
 
     // this checks that returned price cannot be zero
-    //assert getPrice(base, quote) != 0;  
+    assert getPrice(base, quote) != 0;  
 }
 
 // Fails
@@ -540,3 +540,17 @@ rule pow10Integrity(uint256 x, uint256 y) {
     assert oracle.pow10(1) == 10;
     assert oracle.pow10(2) == 100;
 }
+
+// Integrity of exit()
+// investedValue[strategy] = 0 <= strategyToken.balanceOf(SmartVault) = 0
+// if investedValue[strategy] != 0 => strategy.exit() should not revert
+invariant integrityOfExit() {
+
+}
+
+// rule ifInvestedValueNotZeroCanAlwaysExit
+// 1) strategyA.exit(args1) not reverting
+// 2) return to initial storage
+// 3) swap(tokenA)
+// 4) strategyA.exit(args1) should not revert
+
