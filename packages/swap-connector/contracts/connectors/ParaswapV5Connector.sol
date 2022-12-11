@@ -27,7 +27,7 @@ import '../interfaces/IParaswapV5Augustus.sol';
 contract ParaswapV5Connector {
     using SafeERC20 for IERC20;
 
-    // Reference to UniswapV3 router
+    // Reference to Paraswap V5 Augustus swapper
     IParaswapV5Augustus private immutable paraswapV5Augustus;
 
     /**
@@ -39,12 +39,12 @@ contract ParaswapV5Connector {
     }
 
     /**
-     * @dev Internal function to swap two tokens through UniswapV3
+     * @dev Internal function to swap two tokens through Paraswap V5
      * @param tokenIn Token being sent
      * @param tokenOut Token being received
      * @param amountIn Amount of tokenIn being swapped
      * @param minAmountOut Minimum amount of tokenOut willing to receive
-     * @param data ABI-encoded-packed specifying the list of hop-tokens and fees to use
+     * @param data Calldata to be sent to the Augusuts swapper
      */
     function _swapParaswapV5(
         address tokenIn,

@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "target": "es2019",
+    "module": "commonjs",
+    "rootDir": ".",
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "strict": true
+  },
+  "files": [
+    "index.ts",
+    "hardhat.config.ts"
+  ]
+}

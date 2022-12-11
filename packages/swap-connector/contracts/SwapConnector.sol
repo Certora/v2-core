@@ -17,14 +17,16 @@ pragma solidity ^0.8.0;
 import '@mimic-fi/v2-registry/contracts/implementations/BaseImplementation.sol';
 
 import './ISwapConnector.sol';
-import './connectors/UniswapV3Connector.sol';
 import './connectors/UniswapV2Connector.sol';
+import './connectors/UniswapV3Connector.sol';
 import './connectors/BalancerV2Connector.sol';
 import './connectors/ParaswapV5Connector.sol';
+import './connectors/OneInchV5Connector.sol';
 
 /**
  * @title SwapConnector
- * @dev Swap Connector implementation that interfaces with Uniswap V2, Uniswap V3, Balancer V2, and Paraswap V5.
+ * @dev Swap Connector implementation that interfaces with Uniswap V2, Uniswap V3, Balancer V2, Paraswap V5,
+ * and 1inch V5.
  *
  * It inherits from BaseImplementation which means it's implementation can be used directly from the Mimic Registry,
  * it does not require initialization.
@@ -40,7 +42,8 @@ contract SwapConnector is
     UniswapV2Connector,
     UniswapV3Connector,
     BalancerV2Connector,
-    ParaswapV5Connector
+    ParaswapV5Connector,
+    OneInchV5Connector
 {
     // Namespace under which the Swap Connector is registered in the Mimic Registry
     bytes32 public constant override NAMESPACE = keccak256('SWAP_CONNECTOR');
@@ -58,12 +61,14 @@ contract SwapConnector is
         address uniswapV3Router,
         address balancerV2Vault,
         address paraswapV5Augustus,
+        address oneInchV5Router,
         address registry
     )
         UniswapV2Connector(uniswapV2Router)
         UniswapV3Connector(uniswapV3Router)
         BalancerV2Connector(balancerV2Vault)
         ParaswapV5Connector(paraswapV5Augustus)
+        OneInchV5Connector(oneInchV5Router)
         BaseImplementation(registry)
     {
         // solhint-disable-previous-line no-empty-blocks
@@ -79,17 +84,19 @@ contract SwapConnector is
      * @param data Encoded data to specify different swap parameters depending on the source picked
      */
     function swap(
-        Source source,
+        uint8 source,
         address tokenIn,
         address tokenOut,
         uint256 amountIn,
         uint256 minAmountOut,
         bytes memory data
     ) external override returns (uint256 amountOut) {
-        if (source == Source.UniswapV2) return _swapUniswapV2(tokenIn, tokenOut, amountIn, minAmountOut, data);
-        else if (source == Source.UniswapV3) return _swapUniswapV3(tokenIn, tokenOut, amountIn, minAmountOut, data);
-        else if (source == Source.BalancerV2) return _swapBalancerV2(tokenIn, tokenOut, amountIn, minAmountOut, data);
-        else if (source == Source.ParaswapV5) return _swapParaswapV5(tokenIn, tokenOut, amountIn, minAmountOut, data);
+        Source s = Source(source);
+        if (s == Source.UniswapV2) return _swapUniswapV2(tokenIn, tokenOut, amountIn, minAmountOut, data);
+        else if (s == Source.UniswapV3) return _swapUniswapV3(tokenIn, tokenOut, amountIn, minAmountOut, data);
+        else if (s == Source.BalancerV2) return _swapBalancerV2(tokenIn, tokenOut, amountIn, minAmountOut, data);
+        else if (s == Source.ParaswapV5) return _swapParaswapV5(tokenIn, tokenOut, amountIn, minAmountOut, data);
+        else if (s == Source.OneInchV5) return _swapOneInchV5(tokenIn, tokenOut, amountIn, minAmountOut, data);
         else revert('INVALID_SOURCE');
     }
 }
