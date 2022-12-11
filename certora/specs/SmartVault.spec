@@ -135,7 +135,7 @@ function singleAddressGetsTotalControl(address who) {
 // Realistic value for the decimals (4<=dec<=27)
 function requireValidDecimals(address token) {
     uint256 decimals = oracle.getERC20Decimals(token);
-    require decimals >=4 && decimals <= 27;
+    require decimals >= 4 && decimals <= 27;
 }
 
 // Consistency of the decimals between the ERC20 definition for the quote,

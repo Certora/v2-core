@@ -19,5 +19,5 @@ certoraRun  certora/harness/SmartVaultHarnessSwap.sol \
 --optimistic_loop \
 --rule $1 \
 --rule_sanity basic \
---settings -optimisticFallback=true,-contractRecursionLimit=1,-byteMapHashingPrecision=10 \
---msg "SmartVault: swap - $1" 
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-byteMapHashingPrecision=10,-mediumTimeout=800 \
+--msg "SmartVault: swap - $1 - " 
