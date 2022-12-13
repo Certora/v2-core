@@ -2,52 +2,18 @@
 pragma solidity ^0.8.2;
 
 import '../munged/SmartVault.sol';
-import '../../packages/strategies/contracts/aave-v2/IAaveV2Pool.sol';
-import '../../packages/strategies/contracts/aave-v2/IAaveV2Token.sol';
-import '../../packages/strategies/contracts/aave-v2/IAaveV2IncentivesController.sol';
 
 import '../../packages/smart-vault/contracts/test/samples/DexMock.sol';
 
 contract SmartVaultHarnessSwap is SmartVault {
-
     using FixedPoint for uint256;
     using UncheckedMath for uint256;
 
-    // Underlying token that will be used as the strategy entry point
-    IERC20 public immutable Token;
-
-    // aToken associated to the strategy token
-    IAaveV2Token public immutable aToken;
-
-    // AAVE lending pool to invest the strategy tokens
-    IAaveV2Pool public immutable lendingPool;
-
-    // AAVE lending pool to invest the strategy tokens
-    IAaveV2IncentivesController public immutable incentivesController;
-
     DexMock public immutable dex;
     
-    constructor(IERC20 _token, IAaveV2Pool _lendingPool, 
-    address _wrappedNativeToken, address _registry) SmartVault(_wrappedNativeToken, _registry) 
+    constructor(address _wrappedNativeToken, address _registry) SmartVault(_wrappedNativeToken, _registry) 
     {
-        IAaveV2Pool.ReserveData memory reserveData = _lendingPool.getReserveData(address(_token));
-        require(reserveData.aTokenAddress != address(0), 'AAVE_V2_MISSING_A_TOKEN');
-
-        Token = _token;
-        lendingPool = _lendingPool;
-        aToken = IAaveV2Token(reserveData.aTokenAddress);
-        incentivesController = IAaveV2Token(reserveData.aTokenAddress).getIncentivesController();
-        
         dex = new DexMock();
-    }
-
-    /**
-     * @dev Tells how much a value unit means expressed in the strategy token.
-     * For example, if a strategy has a value of 100 in T0, and then it has a value of 120 in T1,
-     * and the value rate is 1.5, it means the strategy has earned 30 strategy tokens between T0 and T1.
-     */
-    function valueRate() internal pure  returns (uint256) {
-        return FixedPoint.ONE;
     }
 
     function swap(
