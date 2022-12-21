@@ -104,6 +104,8 @@ rule joinIntergrity_investedValue(env e, method f) {
     uint256 slippage;
     bytes data;
 
+    require data.length <= 64;
+
     address tokenOut;
     uint256 amountOut;
 
@@ -112,6 +114,11 @@ rule joinIntergrity_investedValue(env e, method f) {
     tokenOut, amountOut = joinHarness(e, strategy, tokensIn, amountsIn, slippage, data);
 
     uint256 investedValueAfter = investedValue(strategy);
+
+    env e2;
+
+    uint256 amountInInternal = amountInInternal(e2);
+    uint256 amountOutInternal = amountOutInternal(e2);
 
     assert investedValueAfter - investedValueBefore == amountOut, "Remember, with great power comes great responsibility.";
 }
