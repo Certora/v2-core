@@ -45,11 +45,15 @@ contract SmartVaultHarnessStrategy is SmartVault {
         address[] memory tokensOut = new address[](1);
         uint256[] memory amountsOut = new uint256[](1);
 
+        amountsInHigh = amountsIn[0];
+
         (tokensOut, amountsOut) = join(strategy, tokensIn, amountsIn, slippage, data);
 
         tokenOut = tokensOut[0];
         amountOut = amountsOut[0];
     }
+
+    uint256 public amountsInHigh;
 
     function join(
         address strategy,
@@ -74,13 +78,31 @@ contract SmartVaultHarnessStrategy is SmartVault {
 
     uint256 public amountsInExternal;
 
+
+    function exitHarness(
+        address strategy,
+        address[] memory tokensIn,
+        uint256[] memory amountsIn,
+        uint256 slippage,
+        bytes memory data
+    ) external auth returns (address tokenOut, uint256 amountOut) {
+        address[] memory tokensOut = new address[](1);
+        uint256[] memory amountsOut = new uint256[](1);
+
+        (tokensOut, amountsOut) = exit(strategy, tokensIn, amountsIn, slippage, data);
+
+        tokenOut = tokensOut[0];
+        amountOut = amountsOut[0];
+    }
+
+
     function exit(
         address strategy,
         address[] memory tokensIn,
         uint256[] memory amountsIn,
         uint256 slippage,
         bytes memory data
-    ) external override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
+    ) public override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         require(investedValue[strategy] > 0, 'EXIT_NO_INVESTED_VALUE');
         require(slippage <= FixedPoint.ONE, 'EXIT_SLIPPAGE_ABOVE_ONE');
@@ -123,8 +145,23 @@ contract SmartVaultHarnessStrategy is SmartVault {
         emit Exit(strategy, tokensIn, amountsIn, tokensOut, amountsOut, value, performanceFeeAmounts, slippage, data);
     }
 
+
+    function claimHarness(
+        address strategy,
+        bytes memory data
+    ) external auth returns (address tokenOut, uint256 amountOut) {
+        address[] memory tokensOut = new address[](1);
+        uint256[] memory amountsOut = new uint256[](1);
+
+        (tokensOut, amountsOut) = claim(strategy, data);
+
+        tokenOut = tokensOut[0];
+        amountOut = amountsOut[0];
+    }
+
+
      function claim(address strategy, bytes memory data)
-        external
+        public
         override
         auth
         returns (address[] memory tokens, uint256[] memory amounts)
@@ -207,9 +244,9 @@ contract SmartVaultHarnessStrategy is SmartVault {
         tokensOut = exitTokens();
         amountsOut = new uint256[](1);
         uint256 amountIn = amountsIn[0];
-        amountsInInternal = amountsIn[0];
         if (amountIn == 0) return (tokensOut, amountsOut, 0);
 
+        amountInInternal = amountIn;
         uint256 initialATokenBalance = aToken.balanceOf(address(this));
         IERC20(Token).approve(address(lendingPool), amountIn);
         lendingPool.deposit(address(Token), amountIn, address(this), 0);
@@ -220,7 +257,7 @@ contract SmartVaultHarnessStrategy is SmartVault {
         value = amountsOut[0];
     }
 
-    uint256 public amountsInInternal;
+    uint256 public amountInInternal;
 
     /**
      * @dev Withdraw tokens from the AAVE lending pool

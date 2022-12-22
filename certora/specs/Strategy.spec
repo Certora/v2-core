@@ -25,6 +25,8 @@ using PriceOracleHarness as Oracle
 // using DummyERC20A as ERC20A
 // using DummyERC20B as ERC20B
 // using DexMock as Dex
+using AaveV2Token as AToken
+using TokenMock as Token
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -93,8 +95,6 @@ rule sanity(env e, method f)
  **************************************************/
 
 
-// external join
-
 // STATUS - in progress
 // TODO: rule description
 rule joinIntergrity_investedValue(env e, method f) {
@@ -104,8 +104,8 @@ rule joinIntergrity_investedValue(env e, method f) {
     uint256 slippage;
     bytes data;
 
-    require amountsIn[0] != 0;
-    // require data.length <= 64;
+    require amountsIn[0] != 0;  // need this to avoid if branch in internal join. There is a bug with wrong array initialization in CVL
+    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
 
     address tokenOut;
     uint256 amountOut;
@@ -116,8 +116,93 @@ rule joinIntergrity_investedValue(env e, method f) {
 
     uint256 investedValueAfter = investedValue(strategy);
 
-    uint256 amountsInInternal = amountsInInternal(e);
-    uint256 amountsInExternal = amountsInExternal(e);
-
     assert investedValueAfter - investedValueBefore == amountOut, "Remember, with great power comes great responsibility.";
 }
+
+
+rule joinIntergrity_aTokenBalance(env e, method f) {
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+
+    require amountsIn[0] != 0;  // need this to avoid if branch in internal join. There is a bug with wrong array initialization in CVL
+    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
+
+    address tokenOut;
+    uint256 amountOut;
+
+    uint256 aTokenBalanceBefore = AToken.balanceOf(e, currentContract);
+
+    tokenOut, amountOut = joinHarness(e, strategy, tokensIn, amountsIn, slippage, data);
+
+    uint256 aTokenBalanceAfter = AToken.balanceOf(e, currentContract);
+
+    assert aTokenBalanceAfter - aTokenBalanceBefore == amountOut, "Remember, with great power comes great responsibility.";
+}
+
+
+rule joinIntergrity_tokenBalance(env e, method f) {
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+
+    require amountsIn[0] != 0;  // need this to avoid if branch in internal join. There is a bug with wrong array initialization in CVL
+    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
+
+    address tokenOut;
+    uint256 amountOut;
+
+    uint256 tokenBalanceCCBefore = Token.balanceOf(e, currentContract);
+    uint256 tokenBalanceATokenBefore = Token.balanceOf(e, aToken(e));
+    uint256 aTokenBalanceBefore = AToken.balanceOf(e, currentContract);
+
+    tokenOut, amountOut = joinHarness(e, strategy, tokensIn, amountsIn, slippage, data);
+
+    require amountOut != 0; 
+
+    uint256 tokenBalanceCCAfter = Token.balanceOf(e, currentContract);
+    uint256 tokenBalanceATokenAfter = Token.balanceOf(e, aToken(e));
+    uint256 aTokenBalanceAfter = AToken.balanceOf(e, currentContract);
+
+    uint256 amountInInternal = amountInInternal(e);
+    uint256 amountsInExternal = amountsInExternal(e);
+    uint256 amountsInHigh = amountsInHigh(e);
+
+    assert tokenBalanceCCBefore - tokenBalanceCCAfter == amountOut, "Remember, with great power comes great responsibility.";
+    assert tokenBalanceATokenAfter - tokenBalanceATokenBefore == amountOut, "Remember, with great power comes great responsibility.";
+    assert amountsIn[0] == amountOut, "Remember, with great power comes great responsibility.";
+}
+
+
+// 2 small deposit shouldn't bring more proit for user (useless with ratio 1:1 but might be good for other strategies)
+
+
+
+/**************************************************
+ *                 CLAIM INTEGRITY                *
+ **************************************************/
+
+
+// STATUS - in progress
+// TODO: rule description
+// rule claimIntergrity_investedValue(env e, method f) {
+//     address strategy;
+//     bytes data;
+
+//     require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
+
+//     address tokenOut;
+//     uint256 amountOut;
+
+//     uint256 investedValueBefore = investedValue(strategy); 
+
+//     tokenOut, amountOut = claimHarness(e, strategy, data);
+
+//     uint256 investedValueAfter = investedValue(strategy);
+
+//     assert investedValueAfter - investedValueBefore == amountOut, "Remember, with great power comes great responsibility.";
+// }
