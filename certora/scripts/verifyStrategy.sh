@@ -28,10 +28,10 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
 --path . \
 --solc solc8.2 \
 --send_only \
---staging \
+--staging alex/optimistic-hashing \
 --loop_iter 2 \
 --optimistic_loop \
 $RULE  \
 --rule_sanity basic \
---settings -optimisticFallback=true,-contractRecursionLimit=1,-byteMapHashingPrecision=10,-mediumTimeout=800 \
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-byteMapHashingPrecision=10,-mediumTimeout=800,-optimisticUnboundedHashing=true \
 --msg "mimic: $RULE $MSG" 

@@ -63,6 +63,7 @@ contract SmartVaultHarnessStrategy is SmartVault {
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
 
         uint256 value;
+        amountsInExternal = amountsIn[0];
         (tokensOut, amountsOut, value) = join(tokensIn, amountsIn, slippage, data);
         require(tokensOut.length == amountsOut.length, 'JOIN_OUTPUT_INVALID_LENGTH');
 
@@ -70,6 +71,8 @@ contract SmartVaultHarnessStrategy is SmartVault {
 
         emit Join(strategy, tokensIn, amountsIn, tokensOut, amountsOut, value, slippage, data);
     }
+
+    uint256 public amountsInExternal;
 
     function exit(
         address strategy,
@@ -204,9 +207,7 @@ contract SmartVaultHarnessStrategy is SmartVault {
         tokensOut = exitTokens();
         amountsOut = new uint256[](1);
         uint256 amountIn = amountsIn[0];
-
-        amountInInternal = amountsIn[0];
-        amountOutInternal = amountsOut[0];
+        amountsInInternal = amountsIn[0];
         if (amountIn == 0) return (tokensOut, amountsOut, 0);
 
         uint256 initialATokenBalance = aToken.balanceOf(address(this));
@@ -219,8 +220,7 @@ contract SmartVaultHarnessStrategy is SmartVault {
         value = amountsOut[0];
     }
 
-    uint256 public amountInInternal;
-    uint256 public amountOutInternal;
+    uint256 public amountsInInternal;
 
     /**
      * @dev Withdraw tokens from the AAVE lending pool
