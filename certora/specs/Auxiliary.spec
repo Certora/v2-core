@@ -149,7 +149,6 @@ methods {
 
  rule exitSanity() {
     env e;
-    calldataarg args;
     address strategy;
     address[] tokensIn;
     uint256[] amountsIn;

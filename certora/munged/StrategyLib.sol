@@ -28,14 +28,10 @@ library StrategyLib {
      * IMPORTANT! This helper method does not check any of the given params, these should be checked beforehand.
      */
     function claim(address strategy, bytes memory data) internal returns (address[] memory, uint256[] memory) {
-        // Next line was commented by Certora, waiting for a fix of delegatecall (CER-1481)
-        //bytes memory claimData = abi.encodeWithSelector(IStrategy.claim.selector, data);
+        bytes memory claimData = abi.encodeWithSelector(IStrategy.claim.selector, data);
 
         // solhint-disable-next-line avoid-low-level-calls
-        // Certora temp. fix
-        (bool success, bytes memory returndata) = strategy.delegatecall(data);
-        // Original code
-        //(bool success, bytes memory returndata) = strategy.delegatecall(claimData);
+        (bool success, bytes memory returndata) = strategy.delegatecall(claimData);
         Address.verifyCallResult(success, returndata, 'CLAIM_CALL_REVERTED');
         return abi.decode(returndata, (address[], uint256[]));
     }
@@ -52,13 +48,13 @@ library StrategyLib {
         bytes memory data
     ) internal returns (address[] memory tokensOut, uint256[] memory amountsOut, uint256 value) {
         // Next line was commented by Certora, waiting for a fix of delegatecall (CER-1481)
-        //bytes memory joinData = abi.encodeWithSelector(IStrategy.join.selector, tokensIn, amountsIn, slippage, data);
+        bytes memory joinData = abi.encodeWithSelector(IStrategy.join.selector, tokensIn, amountsIn, slippage, data);
         
         // solhint-disable-next-line avoid-low-level-calls
         // Certora temp. fix
-        (bool success, bytes memory returndata) = strategy.delegatecall(data);
+        //(bool success, bytes memory returndata) = strategy.delegatecall(data);
         // Original code
-        //(bool success, bytes memory returndata) = strategy.delegatecall(joinData);
+        (bool success, bytes memory returndata) = strategy.delegatecall(joinData);
         Address.verifyCallResult(success, returndata, 'JOIN_CALL_REVERTED');
         return abi.decode(returndata, (address[], uint256[], uint256));
     }
@@ -74,14 +70,10 @@ library StrategyLib {
         uint256 slippage,
         bytes memory data
     ) internal returns (address[] memory tokensOut, uint256[] memory amountsOut, uint256 value) {
-        // Next line was commented by Certora, waiting for a fix of delegatecall (CER-1481)
-        //bytes memory exitData = abi.encodeWithSelector(IStrategy.exit.selector, tokensIn, amountsIn, slippage, data);
+        bytes memory exitData = abi.encodeWithSelector(IStrategy.exit.selector, tokensIn, amountsIn, slippage, data);
 
         // solhint-disable-next-line avoid-low-level-calls
-        // Certora temp. fix
-        (bool success, bytes memory returndata) = strategy.delegatecall(data);
-        // Original code
-        //(bool success, bytes memory returndata) = strategy.delegatecall(exitData);
+        (bool success, bytes memory returndata) = strategy.delegatecall(exitData);
         Address.verifyCallResult(success, returndata, 'EXIT_CALL_REVERTED');
         return abi.decode(returndata, (address[], uint256[], uint256));
     }

@@ -293,6 +293,18 @@ rule sanity(method f) {
     assert false;
 }
 
+ rule exitSanity() {
+    env e;
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+    require amountsIn[0] > 0;
+    exit(e, strategy, tokensIn, amountsIn, slippage, data);
+    assert false;
+}
+
 // Currently there is an inconsistency problem so this rule is violated.
 // A well-functioning ghost should yield a correct rule.
 rule ghostAuthorizationConsistency() {
@@ -500,7 +512,7 @@ rule pivotUnitPrice(address base, address quote) {
     uint256 priceBase = getFeedPrice(base, pivot);
     uint256 priceQuote = getFeedPrice(quote, pivot);
 
-    requireValidDecimals(pivot);
+    //requireValidDecimals(pivot);
     matchDecimals(base, pivot);
     matchDecimals(quote, pivot);
     

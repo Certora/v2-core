@@ -71,7 +71,7 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         uint256 totalCharged;
         uint256 nextResetTime;
     }
-
+    
     // Price oracle reference
     address public override priceOracle;
 
@@ -390,7 +390,14 @@ contract SmartVault is ISmartVault, PriceFeedProvider, InitializableAuthorizedIm
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
 
         uint256 value;
-        (tokensOut, amountsOut, value) = strategy.join(tokensIn, amountsIn, slippage, data);
+
+         bytes memory joinData = abi.encodeWithSelector(IStrategy.join.selector, tokensIn, amountsIn, slippage, data);
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = strategy.delegatecall(joinData);
+        Address.verifyCallResult(success, returndata, 'JOIN_CALL_REVERTED');
+       (tokensOut, amountsOut, value) =  abi.decode(returndata, (address[], uint256[], uint256));
+        
         require(tokensOut.length == amountsOut.length, 'JOIN_OUTPUT_INVALID_LENGTH');
 
         investedValue[strategy] = investedValue[strategy] + value;
