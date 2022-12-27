@@ -301,6 +301,9 @@ rule sanity(method f) {
     uint256 slippage;
     bytes data;
     require amountsIn[0] > 0;
+    require tokensIn.length == 1;
+    require amountsIn.length == 1;
+    require data.length == 64;
     exit(e, strategy, tokensIn, amountsIn, slippage, data);
     assert false;
 }

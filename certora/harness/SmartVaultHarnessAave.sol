@@ -9,11 +9,11 @@ contract SmartVaultHarness is SmartVault {
     using UncheckedMath for uint256;
 
     // Aave strategy
-    IStrategy public immutable aaveStrategy;
+    address public aaveStrategy;
     
     constructor(address _wrappedNativeToken, address _registry,
         address _aaveStategy) SmartVault(_wrappedNativeToken,_registry) {
-            aaveStrategy = IStrategy(_aaveStategy);
+            aaveStrategy = _aaveStategy;
     }
     
     function join(
@@ -24,7 +24,7 @@ contract SmartVaultHarness is SmartVault {
         bytes memory data
     ) override external auth returns (address[] memory tokensOut, uint256[] memory amountsOut) 
     {
-        address strategy = address(aaveStrategy);
+        address strategy = aaveStrategy;
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         require(slippage <= FixedPoint.ONE, 'JOIN_SLIPPAGE_ABOVE_ONE');
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
@@ -34,7 +34,7 @@ contract SmartVaultHarness is SmartVault {
         //(tokensOut, amountsOut, value) = strategy.join(tokensIn, amountsIn, slippage, data);
         bytes memory joinData = abi.encodeWithSelector(IStrategy.join.selector, tokensIn, amountsIn, slippage, data);
         
-        (bool success, bytes memory returndata) = address(aaveStrategy).delegatecall(joinData);
+        (bool success, bytes memory returndata) = aaveStrategy.delegatecall(joinData);
         Address.verifyCallResult(success, returndata, 'JOIN_CALL_REVERTED');
         (tokensOut, amountsOut, value) =  abi.decode(returndata, (address[], uint256[], uint256));
         
@@ -64,7 +64,7 @@ contract SmartVaultHarness is SmartVault {
         bytes memory exitData = abi.encodeWithSelector(IStrategy.exit.selector, tokensIn, amountsIn, slippage, data);
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = address(aaveStrategy).delegatecall(exitData);
+        (bool success, bytes memory returndata) = aaveStrategy.delegatecall(exitData);
         Address.verifyCallResult(success, returndata, 'EXIT_CALL_REVERTED');
         (tokensOut, amountsOut, value) = abi.decode(returndata, (address[], uint256[], uint256));
 
@@ -109,7 +109,7 @@ contract SmartVaultHarness is SmartVault {
         auth
         returns (address[] memory tokens, uint256[] memory amounts)
     {
-        address strategy = address(aaveStrategy);
+        address strategy = aaveStrategy;
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         // Strategy Lib
         // (tokens, amounts) = strategy.claim(data);
@@ -117,7 +117,7 @@ contract SmartVaultHarness is SmartVault {
         bytes memory claimData = abi.encodeWithSelector(IStrategy.claim.selector, data);
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = strategy.delegatecall(claimData);
+        (bool success, bytes memory returndata) = aaveStrategy.delegatecall(claimData);
         Address.verifyCallResult(success, returndata, 'CLAIM_CALL_REVERTED');
         (tokens, amounts) = abi.decode(returndata, (address[], uint256[]));
         emit Claim(strategy, tokens, amounts, data);

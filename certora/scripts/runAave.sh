@@ -27,7 +27,6 @@ certoraRun  certora/harness/SmartVaultHarnessAave.sol:SmartVaultHarness \
 --send_only \
 --staging jtoman/cer-1481 \
 --loop_iter 3 \
---rule exitSanity \
 --optimistic_loop \
---settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=200,-copyLoopUnroll=9 \
---msg "mimic SmartVault Aave : exit sanity cer1481" 
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=200,-copyLoopUnroll=10 \
+--msg "mimic SmartVault Aave jtoman/cer1481" 
