@@ -14,6 +14,7 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
             certora/harness/Aave/incentivesControllerMock.sol:incentivesController \
             certora/harness/Aave/lendingPoolMock.sol:lendingPool \
             certora/harness/PriceOracleHarness.sol \
+            certora/harness/Tokens/DummyERC20B.sol \
 \
 --verify SmartVaultHarnessStrategy:certora/specs/Strategy.spec \
 \
@@ -22,6 +23,7 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
         SmartVaultHarnessStrategy:priceOracle=PriceOracleHarness \
         SmartVaultHarnessStrategy:lendingPool=lendingPool \
         SmartVaultHarnessStrategy:incentivesController=incentivesController \
+        incentivesController:rewardToken=DummyERC20B \
 \
 \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap @chainlink=node_modules/@chainlink \

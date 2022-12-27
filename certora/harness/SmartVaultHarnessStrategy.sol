@@ -243,6 +243,9 @@ contract SmartVaultHarnessStrategy is SmartVault {
 
         tokensOut = exitTokens();
         amountsOut = new uint256[](1);
+
+        amountsOut[0] = 0;                  // HARNESS: need to avoid a tool bug
+        
         uint256 amountIn = amountsIn[0];
         if (amountIn == 0) return (tokensOut, amountsOut, 0);
 
