@@ -67,7 +67,6 @@ contract SmartVaultHarnessStrategy is SmartVault {
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
 
         uint256 value;
-        amountsInExternal = amountsIn[0];
         (tokensOut, amountsOut, value) = join(tokensIn, amountsIn, slippage, data);
         require(tokensOut.length == amountsOut.length, 'JOIN_OUTPUT_INVALID_LENGTH');
 
@@ -75,8 +74,6 @@ contract SmartVaultHarnessStrategy is SmartVault {
 
         emit Join(strategy, tokensIn, amountsIn, tokensOut, amountsOut, value, slippage, data);
     }
-
-    uint256 public amountsInExternal;
 
 
     function exitHarness(
@@ -280,6 +277,9 @@ contract SmartVaultHarnessStrategy is SmartVault {
 
         tokensOut = joinTokens();
         amountsOut = new uint256[](1);
+
+        amountsOut[0] = 0;                  // HARNESS: need to avoid a tool bug
+
         uint256 amountIn = amountsIn[0];
         if (amountIn == 0) return (tokensOut, amountsOut, 0);
 

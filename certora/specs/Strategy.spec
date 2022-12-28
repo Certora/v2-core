@@ -28,6 +28,7 @@ using DummyERC20B as ERC20B
 using AaveV2Token as AToken
 using TokenMock as Token
 using incentivesController as IncCont
+using lendingPool as LendingPool
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -62,6 +63,7 @@ methods {
     getPrice(address, address) returns (uint256) envfree
     setSwapFee(uint256, uint256, address, uint256)
     incentivesController() returns (address) envfree
+    feeCollector() returns (address) envfree
 
     // Price Oracle & helpers
     Oracle._getFeedData(address) returns (uint256, uint256) envfree
@@ -76,6 +78,8 @@ methods {
     Oracle.pivot() returns(address) envfree
 
     IncCont.getUserUnclaimedRewards(address) returns(uint256) envfree
+
+    LendingPool.getReserveDataAToken(address) returns(address) envfree
 }
 
 
@@ -138,8 +142,6 @@ rule joinIntergrity_tokenBalance(env e,env e2) {
 
     tokenOut, amountOut = joinHarness(e2, strategy, tokensIn, amountsIn, slippage, data);
 
-    require amountOut != 0; 
-
     uint256 tokenBalanceCCAfter = Token.balanceOf(e, currentContract);
     uint256 tokenBalanceATokenAfter = Token.balanceOf(e, aToken(e));
 
@@ -150,7 +152,7 @@ rule joinIntergrity_tokenBalance(env e,env e2) {
 
 
 // STATUS - verified
-// 2 small joins shouldn't bring more proit for user than one (useless with ratio 1:1 but might be good for other future strategies)
+// 2 small joins shouldn't bring more proit than one (useless with ratio 1:1 but might be good for other future strategies)
 rule joinIntergrity_bigVsSmalls(env e) {
     address strategy;
     address[] tokensIn;
@@ -388,12 +390,108 @@ rule claimIntergrity_uselessTheSecond(env e) {
  **************************************************/
 
 
+// STATUS - in progress (https://vaas-stg.certora.com/output/3106/ce4a411d272643bc9e9d44189ff781a8/?anonymousKey=7c007e9dfcef7c20023e9410a7bc91f23fde904f)
+rule exitIntergrity_tokenBalance(env e,env e2) {
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+
+    require LendingPool.getReserveDataAToken(Token) == aToken(e);
+
+    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
+    require amountsIn.length < 10;
+    require tokensIn.length < 10;
+
+    address tokenOut;
+    uint256 amountOut;
+
+    uint256 tokenBalanceCCBefore = Token.balanceOf(e, currentContract);
+    uint256 tokenBalanceATokenBefore = Token.balanceOf(e, aToken(e));
+
+    tokenOut, amountOut = exitHarness(e2, strategy, tokensIn, amountsIn, slippage, data);
+
+    uint256 tokenBalanceCCAfter = Token.balanceOf(e, currentContract);
+    uint256 tokenBalanceATokenAfter = Token.balanceOf(e, aToken(e));
+
+    assert tokenBalanceCCAfter - tokenBalanceCCBefore == amountOut, "Remember, with great power comes great responsibility.";
+    assert tokenBalanceATokenBefore - tokenBalanceATokenAfter == amountOut, "Remember, with great power comes great responsibility.";
+    assert amountsIn[0] == amountOut, "Remember, with great power comes great responsibility.";     // broken becuase of the bug in CVL with arrays
+}
+
+
+// STATUS - verified (but why? amountsOut can be changed inside for loop and it's a different value fram what we transferred)
+rule exitIntergrity_investedValueAndATokenBalance(env e) {
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+
+    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
+    require amountsIn.length < 10;
+    require tokensIn.length < 10;
+
+    address tokenOut;
+    uint256 amountOut;
+
+    uint256 investedValueBefore = investedValue(strategy);
+    uint256 aTokenBalanceBefore = AToken.balanceOf(e, currentContract);
+
+    tokenOut, amountOut = exitHarness(e, strategy, tokensIn, amountsIn, slippage, data);
+
+    uint256 investedValueAfter = investedValue(strategy);
+    uint256 aTokenBalanceAfter = AToken.balanceOf(e, currentContract);
+
+    assert investedValueAfter >= investedValueBefore, "Remember, with great power comes great responsibility.";
+    assert aTokenBalanceBefore - aTokenBalanceAfter == amountOut, "Remember, with great power comes great responsibility.";
+}
+
+
+// STATUS - in progress 
+rule exitIntergrity_untouchableBalance(env e) {
+    address strategy;
+    address[] tokensIn;
+    uint256[] amountsIn;
+    uint256 slippage;
+    bytes data;
+
+    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
+    require amountsIn.length < 10;
+    require tokensIn.length < 10;
+
+    address tokenOut;
+    uint256 amountOut;
+
+    address anotherAddress;
+    require anotherAddress != currentContract
+            && anotherAddress != Token
+            && anotherAddress != AToken
+            && anotherAddress != strategy
+            && anotherAddress != feeCollector();
+
+    uint256 investedValueBefore = investedValue(anotherAddress);
+    uint256 aTokenBalanceBefore = AToken.balanceOf(e, anotherAddress);
+    uint256 tokenBalanceCCBefore = Token.balanceOf(e, anotherAddress);
+
+    tokenOut, amountOut = exitHarness(e, strategy, tokensIn, amountsIn, slippage, data);
+
+    uint256 investedValueAfter = investedValue(anotherAddress);
+    uint256 aTokenBalanceAfter = AToken.balanceOf(e, anotherAddress);
+    uint256 tokenBalanceCCAfter = Token.balanceOf(e, anotherAddress);
+    
+    assert investedValueBefore == investedValueAfter, "Remember, with great power comes great responsibility.";
+    assert aTokenBalanceBefore == aTokenBalanceAfter, "Remember, with great power comes great responsibility.";
+    assert tokenBalanceCCBefore == tokenBalanceCCAfter, "Remember, with great power comes great responsibility.";     // broken becuase of the bug in CVL with arrays
+}
+
+
 // can withdraw all investedValue only in specific cases:
 // what cases?
 
 
 // if strategy is successful, fees are paid
-
 
 
 // if strategy is not successful, withdraw less than joined
@@ -407,3 +505,6 @@ rule claimIntergrity_uselessTheSecond(env e) {
 
 
 // join, then exit. integrity of all balances of SmartVault should increase becuase we pay fees?
+
+
+// join/claim/exit of one strategy, shouldn't affect join/claim/exit of another strategy

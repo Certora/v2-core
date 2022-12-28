@@ -55,4 +55,8 @@ contract lendingPool is IAaveV2Pool {
     function getReserveData(address asset) override external view returns (ReserveData memory) {
         return reserveData[asset];
     }
+
+    function getReserveDataAToken(address asset) external view returns (address) {
+        return reserveData[asset].aTokenAddress;
+    }
 }

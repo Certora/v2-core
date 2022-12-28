@@ -30,7 +30,7 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
 --path . \
 --solc solc8.2 \
 --send_only \
---staging \
+--staging master \
 --loop_iter 2 \
 --optimistic_loop \
 $RULE  \
