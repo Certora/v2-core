@@ -8,6 +8,7 @@ then
     MSG=": $2"
 fi
 
+
 certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
             certora/harness/Aave/AaveV2Token.sol \
@@ -15,6 +16,8 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
             certora/harness/Aave/lendingPoolMock.sol:lendingPool \
             certora/harness/PriceOracleHarness.sol \
             certora/harness/Tokens/DummyERC20B.sol \
+            packages/registry/contracts/registry/Registry.sol \
+            packages/smart-vault/contracts/test/samples/WrappedNativeTokenMock.sol \
 \
 --verify SmartVaultHarnessStrategy:certora/specs/Strategy.spec \
 \
@@ -24,6 +27,7 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
         SmartVaultHarnessStrategy:lendingPool=lendingPool \
         SmartVaultHarnessStrategy:incentivesController=incentivesController \
         incentivesController:rewardToken=DummyERC20B \
+        SmartVaultHarnessStrategy:wrappedNativeToken=WrappedNativeTokenMock \
 \
 \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap @chainlink=node_modules/@chainlink \

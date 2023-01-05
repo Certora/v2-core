@@ -45,15 +45,11 @@ contract SmartVaultHarnessStrategy is SmartVault {
         address[] memory tokensOut = new address[](1);
         uint256[] memory amountsOut = new uint256[](1);
 
-        amountsInHigh = amountsIn[0];
-
         (tokensOut, amountsOut) = join(strategy, tokensIn, amountsIn, slippage, data);
 
         tokenOut = tokensOut[0];
         amountOut = amountsOut[0];
     }
-
-    uint256 public amountsInHigh;
 
     function join(
         address strategy,

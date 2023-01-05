@@ -87,7 +87,7 @@ methods {
 
 
 // STATUS - verified
-// Correctness check of swap() function
+// Addresses' balances involved in swap should be updated correctly regarding DeX's token, paidFees and amountOut
 rule swapIntergrity(env e, env e2, method f) {
     // swap parameters
     address tokenIn;
@@ -125,11 +125,8 @@ rule swapIntergrity(env e, env e2, method f) {
     uint256 payFeeResults = payFee(e, tokenOut, feesAndSwapAmount) at initialState;
 
     assert payFeeResults == paidFees;
-
     assert balanceFCAfter - balanceFCBefore == paidFees, "Remember, with great power comes great responsibility.";
-
     assert balanceOutDexBefore - balanceOutDexAfter == feesAndSwapAmount, "Dex balance should be decreased by amountOut";
-
     assert amountOut == balanceOutDexBefore - balanceOutDexAfter - paidFees, "AmountOut should be equal to amountOutBeforeFees + paidFees";
 }
 
@@ -162,7 +159,7 @@ rule swapIntergrityTokenIn(env e, env e2, method f) {
 
 
 // STATUS - verified
-// any other address except swap actors won't be affected by swap()
+// any other address except swap actors shouldn't be affected by swap()
 rule swapIntergrityOthersUntouchable(env e, env e2, method f) {
     // swap parameters
     address tokenIn;
@@ -195,6 +192,7 @@ rule swapIntergrityOthersUntouchable(env e, env e2, method f) {
 
 
 // STATUS - verified
+// During swap(), no additional tokens should be gain regarding tokenIn
 rule swapConsistencyTokenIn(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
@@ -222,6 +220,7 @@ rule swapConsistencyTokenIn(env e, env e2, method f) {
 
 
 // STATUS - verified
+// During swap(), no additional tokens should be gain regarding tokenOut
 rule swapConsistencyTokenOut(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
