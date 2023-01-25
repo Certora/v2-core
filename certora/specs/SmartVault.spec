@@ -99,11 +99,13 @@ ghost mapping(address => mapping(bytes4 => bool)) ghostAuthorized {
 }
 
 hook Sstore authorized[KEY address who][KEY bytes4 what] bool value (bool old_value) STORAGE {
-    ghostAuthorized[who][what] = value; 
+    bytes4 what_prime = what & 0xffffffff;
+    ghostAuthorized[who][what_prime] = value; 
 }
 
 hook Sload bool value authorized[KEY address who][KEY bytes4 what] STORAGE {
-    require ghostAuthorized[who][what] == value; 
+    bytes4 what_prime = what & 0xffffffff;
+    require ghostAuthorized[who][what_prime] == value; 
 } 
 
 /**************************************************
@@ -128,8 +130,8 @@ function doubleAddressAuthorization(address who1, address who2, bytes4 what) {
 // for **any** function signature (what)
 function singleAddressGetsTotalControl(address who) {
     require forall address user.
-                forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig]);
-    require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
+                forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig & 0xffffffff]);
+    require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig & 0xffffffff]);
 }
 
 // Realistic value for the decimals (4<=dec<=27)
@@ -219,7 +221,7 @@ rule collectTransferIntegrity(address token, address from, uint256 amount) {
         assert fromBalance1 == fromBalance2;
     }
     else {
-        assert fromBalance1 == fromBalance2 + amount;
+        assert fromBalance2 == fromBalance1 - amount;
         assert vaultBalance2 == vaultBalance1 + amount;
     }
 
@@ -235,6 +237,9 @@ rule withdrawTransferIntegrity(address token, address to, uint256 amount) {
     address anyUser;
     require anyToken != token;
     require anyUser != currentContract && anyUser != to;
+    require token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // not a native token
+    uint256 withdrawFeePct = getWithdrawFeePct(e);
+    require withdrawFeePct == 0;  // simplification - no fees
 
     uint256 toBalance1 = oracle.balanceOfToken(token, to);
     uint256 vaultBalance1 = oracle.balanceOfToken(token, currentContract);
@@ -255,7 +260,7 @@ rule withdrawTransferIntegrity(address token, address to, uint256 amount) {
     }
     else {
         assert toBalance2 == toBalance1 + amount;
-        assert vaultBalance1 == vaultBalance2 + amount;
+        assert vaultBalance2 == vaultBalance1 - amount;
     }
     
     assert toBalanceAny1 == toBalanceAny2;
@@ -293,6 +298,20 @@ rule sanity(method f) {
     assert false;
 }
 
+rule sanityFiltered(method f)
+filtered {f -> f.selector == claim(address,bytes).selector || 
+              f.selector == bridge(uint8,uint256,address,uint256,uint8,uint256,bytes).selector || 
+              f.selector == join(address,address[],uint256[],uint256,bytes).selector ||
+              f.selector == exit(address,address[],uint256[],uint256,bytes).selector ||
+              f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector ||
+              f.selector == wrap(uint256,bytes).selector}
+{
+    env e;
+    calldataarg args;
+    f(e, args);
+    assert false;
+}
+
  rule exitSanity() {
     env e;
     address strategy;
@@ -319,10 +338,14 @@ rule ghostAuthorizationConsistency() {
 
 
 rule onlyAuthUserCanCallFunctions(method f) 
-filtered {f -> !f.isView && !f.isFallback} {
+filtered {f -> !f.isView && !f.isFallback &&
+                f.selector != paySwapFee(address,uint256).selector &&
+                f.selector != initialize(address).selector &&
+                f.selector != setPriceFeeds(address[],address[],address[]).selector} {
     // this rule checks that only authorized user can run all the methods in the contract without reverting
     // all the other users when trying to execute any method should revert
     // therefore the rule should only fail on
+    // * paySwapFee(address,uint256) - our own method added to the harness
     // * initialize(address) - this method should be run only once
     // * setPriceFeeds(address[],address[],address[]) - doesn't revert if the loop isn't executed
     // regarding setPriceFeeds() we manually checked that it also requires authorization

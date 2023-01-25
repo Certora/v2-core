@@ -229,17 +229,32 @@ contract SmartVaultHarness is SmartVault {
         uint256 finalATokenBalance = aToken.balanceOf(address(this));
         value = initialATokenBalance - finalATokenBalance;
     }
-}    
-/*
-    function helperGetFeeParams(Fee memory fee) public returns (uint256, uint256, address, uint256, uint256, uint256) {
-        /*struct Fee {
-            uint256 pct;
-            uint256 cap;
-            address token;
-            uint256 period;
-            uint256 totalCharged;
-            uint256 nextResetTime;
-        }
-        return (fee.pct, fee.cap, fee.token, fee.period, fee.totalCharged, fee.nextResetTime);
+
+    /*function payWithdrawFee(address token, uint256 amount) external returns (uint256 paidAmount){
+        return _payFee(token, amount, withdrawFee);
+    }*/
+
+    function getWithdrawFeePct() view external returns (uint256) {
+        return withdrawFee.pct;
     }
-*/
+
+    function getWithdrawFeeCap() view external returns (uint256) {
+        return withdrawFee.cap;
+    }
+
+    function getWithdrawFeeToken() view external returns (address) {
+        return withdrawFee.token;
+    }
+
+    function getWithdrawFeePeriod() view external returns (uint256) {
+        return withdrawFee.period;
+    }
+
+    function getWithdrawFeeTotalCharged() view external returns (uint256) {
+        return withdrawFee.totalCharged;
+    }
+
+    function getWithdrawFeeNextResetTime() view external returns (uint256) {
+        return withdrawFee.nextResetTime;
+    }
+}
