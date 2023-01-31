@@ -33,11 +33,11 @@ certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
 --packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap @chainlink=node_modules/@chainlink \
 --path . \
 --solc solc8.2 \
---send_only \
 --staging master \
+--send_only \
 --loop_iter 2 \
 --optimistic_loop \
 $RULE  \
 --rule_sanity basic \
---settings -optimisticFallback=true,-contractRecursionLimit=1,-byteMapHashingPrecision=10,-mediumTimeout=800 \
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-hashingLengthBound=10,-mediumTimeout=800 \
 --msg "mimic: $RULE $MSG" 
