@@ -393,7 +393,7 @@ rule claimIntergrity_allowanceToClaim(env e) {
 
 // STATUS - verified
 // The second claim in two consecutive claims should bring 0 rewards 
-rule claimIntergrity_uselessTheSecond(env e) {
+rule claimIntergrity_uselessTheSecondClaim(env e) {
     address strategy;
     bytes data;
 
@@ -417,7 +417,7 @@ rule claimIntergrity_uselessTheSecond(env e) {
 // STATUS - in progress
 // Token balance of SmartVault and aToken contracts should be changed according to amountOut value.
 // amountsIn[0] should be equal to the sum amountOut and paidFees
-// https://vaas-stg.certora.com/output/3106/79c4e62446f440c9b3598ca4e1cbfac4/?anonymousKey=58d94dd6d2f902b7c0ad85218e9cd1bbeb055568
+// cannot understand counter example, where tokens went? https://vaas-stg.certora.com/output/3106/b67fe9ca7dd944a0b5f1c401f17108be/?anonymousKey=fdaa99605ec65ca17347aecac4d49a51a71750f4
 rule exitIntergrity_tokenBalance(env e, env e2) {
     address strategy;
     address[] tokensIn;
@@ -454,7 +454,7 @@ rule exitIntergrity_tokenBalance(env e, env e2) {
 
     assert tokenBalanceCCAfter - tokenBalanceCCBefore == amountOut, "Remember, with great power comes great responsibility.";
     assert tokenBalanceATokenBefore - tokenBalanceATokenAfter == exitTogether, "Remember, with great power comes great responsibility.";
-    assert amountsIn[0] == exitTogether, "Remember, with great power comes great responsibility.";     // broken becuase of the bug in CVL with arrays
+    assert amountsIn[0] == exitTogether, "Remember, with great power comes great responsibility.";
 }
 
 
@@ -525,100 +525,6 @@ rule exitIntergrity_untouchableBalance(env e) {
     assert aTokenBalanceBefore == aTokenBalanceAfter, "Remember, with great power comes great responsibility.";
     assert tokenBalanceCCBefore == tokenBalanceCCAfter, "Remember, with great power comes great responsibility.";     // broken becuase of the bug in CVL with arrays
 }
-
-
-// STATUS - in progress (timeout, need to discuss how to simpify it)
-// 2 small exits shouldn't bring more proit than one big exit
-// rule exitIntergrity_bigVsSmalls(env e) {
-//     address strategy;
-//     address[] tokensIn;
-//     uint256[] amountsInBig; uint256[] amountsInSmall1; uint256[] amountsInSmall2;
-//     uint256 slippage;
-//     bytes data;
-
-//     require amountsInBig[0] == amountsInSmall1[0] + amountsInSmall2[0];  
-//     require amountsInBig.length < 10;       // bug workaround
-//     require amountsInSmall1.length < 10;    // bug workaround
-//     require amountsInSmall2.length < 10;    // bug workaround
-//     require tokensIn.length < 10;           // bug workaround
-
-//     require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
-
-//     address tokenOut;
-//     uint256 amountOutBig; uint256 amountOutSmall1; uint256 amountOutSmall2;
-
-//     uint256 investedValueBefore = investedValue(strategy);
-//     uint256 aTokenBalanceBefore = AToken.balanceOf(e, currentContract);
-//     uint256 feeBalanceBefore = Token.balanceOf(e, feeCollector());
-
-//     storage initialStorage = lastStorage;
-
-//     tokenOut, amountOutBig = exitHarness(e, strategy, tokensIn, amountsInBig, slippage, data);
-
-//     uint256 investedValueAfterBig = investedValue(strategy);
-//     uint256 aTokenBalanceAfterBig = AToken.balanceOf(e, currentContract);
-//     uint256 feeBalanceAfterBig = Token.balanceOf(e, feeCollector());
-
-//     tokenOut, amountOutSmall1 = exitHarness(e, strategy, tokensIn, amountsInSmall1, slippage, data) at initialStorage;
-//     tokenOut, amountOutSmall2 = exitHarness(e, strategy, tokensIn, amountsInSmall2, slippage, data);
-
-//     uint256 investedValueAfterSmall = investedValue(strategy);
-//     uint256 aTokenBalanceAfterSmall = AToken.balanceOf(e, currentContract);
-//     uint256 feeBalanceAfterSmall = Token.balanceOf(e, feeCollector());
-
-//     assert investedValueAfterBig >= investedValueAfterSmall, "Remember, with great power comes great responsibility.";
-//     assert aTokenBalanceAfterBig >= aTokenBalanceAfterSmall, "Remember, with great power comes great responsibility.";
-//     assert feeBalanceAfterBig >= feeBalanceAfterSmall, "Remember, with great power comes great responsibility.";
-// }
-
-
-// STATUS - in progress
-// rule exitIntergrity_bigVsSmall2(env e) {
-//     address strategy;
-//     address[] tokensIn;
-//     uint256[] amountsInBig; uint256[] amountsInSmall1;
-//     uint256 slippage;
-//     bytes data;
-
-//     require amountsInBig[0] > amountsInSmall1[0];  
-//     require amountsInBig.length < 10;       // bug workaround
-//     require amountsInSmall1.length < 10;    // bug workaround
-//     require tokensIn.length < 10;           // bug workaround
-
-//     require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
-
-//     require currentContract != feeCollector()
-//                 && feeCollector() != AToken
-//                 && feeCollector() != Token;     // avoid getting fees to a wrong adrress
-
-//     require LendingPool.getReserveDataAToken(Token) == aToken(e);   // setup for exit() because reserveData mapping in LendingPool isn't sychronized with the real aToken address
-
-//     address tokenOut;
-//     uint256 amountOutBig; uint256 amountOutSmall;
-
-//     uint256 investedValueBefore = investedValue(strategy);
-//     uint256 aTokenBalanceBefore = AToken.balanceOf(e, currentContract);
-//     uint256 feeBalanceBefore = Token.balanceOf(e, feeCollector());
-
-//     storage initialStorage = lastStorage;
-
-//     tokenOut, amountOutBig = exitHarness(e, strategy, tokensIn, amountsInBig, slippage, data);
-
-//     uint256 investedValueAfterBig = investedValue(strategy);
-//     uint256 aTokenBalanceAfterBig = AToken.balanceOf(e, currentContract);
-//     uint256 feeBalanceAfterBig = Token.balanceOf(e, feeCollector());
-
-//     tokenOut, amountOutSmall = exitHarness(e, strategy, tokensIn, amountsInSmall1, slippage, data) at initialStorage;
-
-//     uint256 investedValueAfterSmall = investedValue(strategy);
-//     uint256 aTokenBalanceAfterSmall = AToken.balanceOf(e, currentContract);
-//     uint256 feeBalanceAfterSmall = Token.balanceOf(e, feeCollector());
-
-    // assert investedValueAfterBig <= investedValueAfterSmall, "Remember, with great power comes great responsibility.";
-    // assert aTokenBalanceAfterBig < aTokenBalanceAfterSmall, "Remember, with great power comes great responsibility.";
-    // assert feeBalanceAfterBig >= feeBalanceAfterSmall, "Remember, with great power comes great responsibility.";
-//     assert amountOutSmall <= amountOutBig, "Remember, with great power comes great responsibility.";
-// }
 
 
 // STATUS - vefified (partically because of there are too many varaibles in the case of successful strategy 
@@ -717,7 +623,7 @@ rule frontrunJoinCheck(env e, method f) {
 }
 
 
-// STATUS - in progress
+// STATUS - verified
 // Other functions cannot frontrun claim
 rule noClaimFrontrun(env e, method f)
     filtered { f -> f.selector != claim(address, bytes).selector            // 2 claims can affect each other if 2 different strategies managed by the same vault. So we don't check it
@@ -731,10 +637,10 @@ rule noClaimFrontrun(env e, method f)
     uint256 slippage;
     bytes data;
 
-    require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
-    require amountsInMain.length < 10;       // bug workaround
-    require amountsInFront.length < 10;    // bug workaround
-    require amountsInFront.length < 10;           // bug workaround
+    require data.length <= 64;                      // need this to avoid the issue when bytes type affects other variables values
+    require amountsInMain.length < 10;              // bug workaround
+    require amountsInFront.length < 10;             // bug workaround
+    require amountsInFront.length < 10;             // bug workaround
 
     address tokenOut;
     uint256 amountOutMain; uint256 amountOutFront;
