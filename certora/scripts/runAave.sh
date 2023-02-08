@@ -21,12 +21,14 @@ certoraRun  certora/harness/SmartVaultHarnessAave.sol:SmartVaultHarness \
         AaveV2Token:incentivesController=incentivesController \
 \
 \
---packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap @chainlink=node_modules/@chainlink hardhat=packages/swap-connector/node_modules/hardhat \
+--packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi @uniswap=node_modules/@uniswap @chainlink=node_modules/@chainlink \
 --path . \
 --solc solc8.2 \
 --send_only \
---staging jtoman/cer-1481 \
---loop_iter 3 \
+--staging jtoman/cert-589-pt2 \
+--loop_iter 2 \
 --optimistic_loop \
---settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=200,-copyLoopUnroll=10 \
---msg "mimic SmartVault Aave jtoman/cer1481" 
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=200,-copyLoopUnroll=8 \
+--msg "all rules mimic SmartVault Aave jtoman/cert-589-pt2" 
+# --msg "mimic SmartVault Aave jtoman/cer1481" 
+# --rule sanityFiltered \

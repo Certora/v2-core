@@ -123,4 +123,11 @@ contract SmartVaultHarness is SmartVault {
         emit Claim(strategy, tokens, amounts, data);
     }
 
+    function paySwapFee(address token, uint256 amount) external returns (uint256 paidAmount) {
+        return _payFee(token, amount, swapFee);
+    }
+
+    function getWithdrawFeePct() view external returns (uint256) {
+        return withdrawFee.pct;
+    }
 }
