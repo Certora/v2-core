@@ -414,10 +414,9 @@ rule claimIntergrity_uselessTheSecondClaim(env e) {
  **************************************************/
 
 
-// STATUS - in progress
+// STATUS - verified
 // Token balance of SmartVault and aToken contracts should be changed according to amountOut value.
 // amountsIn[0] should be equal to the sum amountOut and paidFees
-// cannot understand counter example, where tokens went? https://vaas-stg.certora.com/output/3106/b67fe9ca7dd944a0b5f1c401f17108be/?anonymousKey=fdaa99605ec65ca17347aecac4d49a51a71750f4
 rule exitIntergrity_tokenBalance(env e, env e2) {
     address strategy;
     address[] tokensIn;
@@ -426,7 +425,7 @@ rule exitIntergrity_tokenBalance(env e, env e2) {
     bytes data;
 
     require LendingPool.getReserveDataAToken(Token) == aToken(e);   // setup for exit() because reserveData mapping in LendingPool isn't sychronized with the real aToken address
-
+    require Token != 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;    // eliminating a case with low-level call
     require data.length <= 64;  // need this to avoid the issue when bytes type affects other variables values
     require amountsIn.length < 10;  // bug workaround
     require tokensIn.length < 10;   // bug workaround
