@@ -65,6 +65,9 @@ methods {
     oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
     oracle.mulDownFP(uint256, uint256) returns (uint256) envfree
     oracle.pivot() returns(address) envfree
+
+    //Native token helper
+    getNativeBalanceOf(address, address) returns (uint256) envfree
 }
 
 /**************************************************
@@ -254,6 +257,45 @@ rule withdrawTransferIntegrity(address token, address to, uint256 amount) {
     uint256 toBalanceAny2 = oracle.balanceOfToken(anyToken, to);
     uint256 vaultBalanceAny2 = oracle.balanceOfToken(anyToken, currentContract);
     uint256 anyUserBalance2 = oracle.balanceOfToken(token, anyUser);
+
+    if(to == currentContract) {
+        assert toBalance2 == toBalance1;
+    }
+    else {
+        assert toBalance2 == toBalance1 + amount;
+        assert vaultBalance2 == vaultBalance1 - amount;
+    }
+    
+    assert toBalanceAny1 == toBalanceAny2;
+    assert vaultBalanceAny1 == vaultBalanceAny2;
+    assert anyUserBalance1 == anyUserBalance2;
+}
+
+rule withdrawTransferIntegrityOfNativeToken(address nativeToken, address to, uint256 amount) {
+    env e;
+    bytes data;
+    address anyToken;
+    address anyUser;
+    require anyToken != nativeToken;
+    require anyToken != WRToken;  // wrapped native token has the same balance as the native token
+    require anyUser != currentContract && anyUser != to;
+    require nativeToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // explicitly a native token
+    uint256 withdrawFeePct = getWithdrawFeePct(e);
+    require withdrawFeePct == 0;  // simplification - no fees
+
+    uint256 toBalance1 = getNativeBalanceOf(nativeToken, to);
+    uint256 vaultBalance1 = getNativeBalanceOf(nativeToken, currentContract);
+    uint256 toBalanceAny1 = oracle.balanceOfToken(anyToken, to);
+    uint256 vaultBalanceAny1 = oracle.balanceOfToken(anyToken, currentContract);
+    uint256 anyUserBalance1 = getNativeBalanceOf(nativeToken, anyUser);
+
+        withdraw(e, nativeToken, amount, to, data);
+
+    uint256 toBalance2 = getNativeBalanceOf(nativeToken, to);
+    uint256 vaultBalance2 = getNativeBalanceOf(nativeToken, currentContract);
+    uint256 toBalanceAny2 = oracle.balanceOfToken(anyToken, to);
+    uint256 vaultBalanceAny2 = oracle.balanceOfToken(anyToken, currentContract);
+    uint256 anyUserBalance2 = getNativeBalanceOf(nativeToken, anyUser);
 
     if(to == currentContract) {
         assert toBalance2 == toBalance1;

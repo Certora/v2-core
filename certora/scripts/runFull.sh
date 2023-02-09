@@ -35,6 +35,7 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --rule onlyAuthUserCanCallFunctions \
 --rule collectTransferIntegrity \
 --rule withdrawTransferIntegrity \
+--rule withdrawTransferIntegrityOfNativeToken \
 --rule wrapUnwrapIntegrity \
 --rule unwrapWrapIntegrity \
 --rule unwrapCannotRevertAfterWrap \

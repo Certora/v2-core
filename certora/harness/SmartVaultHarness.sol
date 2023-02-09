@@ -257,4 +257,9 @@ contract SmartVaultHarness is SmartVault {
     function getWithdrawFeeNextResetTime() view external returns (uint256) {
         return withdrawFee.nextResetTime;
     }
+
+    function getNativeBalanceOf(address token, address user) view external returns (uint256) {
+        require(token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, 'not a valid native token');
+        return address(user).balance;
+    }
 }
