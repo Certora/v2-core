@@ -277,7 +277,6 @@ rule withdrawTransferIntegrityOfNativeToken(address nativeToken, address to, uin
     address anyToken;
     address anyUser;
     require anyToken != nativeToken;
-    require anyToken != WRToken;  // wrapped native token has the same balance as the native token
     require anyUser != currentContract && anyUser != to;
     require nativeToken == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE; // explicitly a native token
     uint256 withdrawFeePct = getWithdrawFeePct(e);
@@ -305,8 +304,14 @@ rule withdrawTransferIntegrityOfNativeToken(address nativeToken, address to, uin
         assert vaultBalance2 == vaultBalance1 - amount;
     }
     
+    if(anyToken == WRToken && to == WRToken) {
+        assert vaultBalanceAny2 - vaultBalanceAny1 == amount;
+    }
+    else {
+        assert vaultBalanceAny1 == vaultBalanceAny2;
+    }
+
     assert toBalanceAny1 == toBalanceAny2;
-    assert vaultBalanceAny1 == vaultBalanceAny2;
     assert anyUserBalance1 == anyUserBalance2;
 }
 
