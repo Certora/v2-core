@@ -60,41 +60,41 @@ methods {
 
     ////////////////////////////////////////
 	// ERC20 methods
-    WRToken.balanceOf(address) returns(uint256) envfree
-    mint(address, uint256) => DISPATCHER(true)
-    burn(address, uint256) => DISPATCHER(true)
+    function WRToken.balanceOf(address) external returns(uint256) envfree;
+    function _.mint(address, uint256) external => DISPATCHER(true);
+    function _.burn(address, uint256) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // SwapConnectorMock methods
     // packages/smart-vault/contracts/test/core/SwapConnectorMock.sol
-    swap(uint8, address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(uint8, address, address, uint256, uint256, bytes) external returns (uint256) => DISPATCHER(true);
 
     ////////////////////////////////////////
     // DexMock methods (called by SwapConnectorMock)
     // packages/smart-vault/contracts/test/samples/DexMock.sol
-    swap(address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(address, address, uint256, uint256, bytes) external returns (uint256) => DISPATCHER(true);
     // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
     //     returns (uint256 amountOut)
 
-    implementationOf(address) returns (address) => DISPATCHER(true)
-    implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
-    ANY_ADDRESS() returns (address) envfree
-    isStrategyAllowed(address) returns (bool) envfree
-    investedValue(address) returns (uint256) envfree
-    isAuthorized(address, bytes4) returns (bool) envfree
-    getPriceFeed(address, address) returns (address) envfree
-    getPrice(address, address) returns (uint256) envfree
-    setSwapFee(uint256, uint256, address, uint256)
+    function _.implementationOf(address) external returns (address) => DISPATCHER(true);
+    function _.implementationData(address) external returns (bool, bool, bytes32) => DISPATCHER(true);
+    function ANY_ADDRESS() external returns (address) envfree;
+    function isStrategyAllowed(address) external returns (bool) envfree;
+    function investedValue(address) external returns (uint256) envfree;
+    function isAuthorized(address, bytes4) external returns (bool) envfree;
+    function getPriceFeed(address, address) external returns (address) envfree;
+    function getPrice(address, address) external returns (uint256) envfree;
+    function setSwapFee(uint256, uint256, address, uint256) external;
 
     // Price oracle & helpers
-    oracle._getFeedData(address) returns (uint256, uint256) envfree
-    oracle.getFeedDecimals(address) returns (uint256) envfree
-    oracle.getERC20Decimals(address) returns (uint256) envfree
-    oracle.pow10(uint256) returns (uint256) envfree
-    oracle.balanceOfToken(address, address) returns(uint256) envfree
-    oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
-    oracle.uint32Sol(uint256) returns (uint32) envfree
-    oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
+    function oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    function oracle.getFeedDecimals(address) external returns (uint256) envfree;
+    function oracle.getERC20Decimals(address) external returns (uint256) envfree;
+    function oracle.pow10(uint256) external returns (uint256) envfree;
+    function oracle.balanceOfToken(address, address) external returns(uint256) envfree;
+    function oracle.uint32ToBytes4(uint32) external returns (bytes4) envfree;
+    function oracle.uint32Sol(uint256) external returns (uint32) envfree;
+    function oracle.getERC20Allowance(address, address, address) external returns (uint256) envfree;
 
     // //
     // tokenA.balanceOf(address) envfree

@@ -25,10 +25,11 @@ certoraRun  certora/harness/SmartVaultHarnessAave.sol:SmartVaultHarness \
 --path . \
 --solc solc8.2 \
 --send_only \
---staging jtoman/cert-589-pt2 \
+--staging \
 --loop_iter 2 \
 --optimistic_loop \
 --settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=200,-copyLoopUnroll=8 \
---msg "all rules mimic SmartVault Aave jtoman/cert-589-pt2" 
+--msg "all rules mimic SmartVault Aave "
+# --msg "all rules mimic SmartVault Aave jtoman/cert-589-pt2" 
 # --msg "mimic SmartVault Aave jtoman/cer1481" 
 # --rule sanityFiltered \

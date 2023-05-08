@@ -12,14 +12,14 @@
 
 ////////////////////////////////////////
 // ERC20 methods
-import "./erc20.spec"
+import "./erc20.spec";
 /**************************************************
  *                LINKED CONTRACTS                *
  **************************************************/
 // Declaration of contracts used in the spec
 
- using WrappedNativeTokenMock as WRToken
- using PriceOracleHarness as oracle
+ using WrappedNativeTokenMock as WRToken;
+ using PriceOracleHarness as oracle;
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -28,46 +28,46 @@ methods {
 
     ////////////////////////////////////////
 	// ERC20 methods
-    WRToken.balanceOf(address) returns(uint256) envfree
-    mint(address, uint256) => DISPATCHER(true)
-    burn(address, uint256) => DISPATCHER(true)
+    function WRToken.balanceOf(address) external returns(uint256) envfree;
+    function _.mint(address, uint256) external => DISPATCHER(true);
+    function _.burn(address, uint256) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // SwapConnectorMock methods
     // packages/smart-vault/contracts/test/core/SwapConnectorMock.sol
-    swap(uint8, address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(uint8, address, address, uint256, uint256, bytes) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // DexMock methods (called by SwapConnectorMock)
     // packages/smart-vault/contracts/test/samples/DexMock.sol
-    swap(address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(address, address, uint256, uint256, bytes) external => DISPATCHER(true);
     // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
     //     returns (uint256 amountOut)
 
-    implementationOf(address) returns (address) => DISPATCHER(true)
-    implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
-    ANY_ADDRESS() returns (address) envfree
-    isStrategyAllowed(address) returns (bool) envfree
-    investedValue(address) returns (uint256) envfree
-    isAuthorized(address, bytes4) returns (bool) envfree
-    getPriceFeed(address, address) returns (address) envfree
-    getPrice(address, address) returns (uint256) envfree
-    setSwapFee(uint256, uint256, address, uint256)
+    function _.implementationOf(address) external => DISPATCHER(true);
+    function _.implementationData(address) external => DISPATCHER(true);
+    function ANY_ADDRESS() external returns (address) envfree;
+    function isStrategyAllowed(address) external returns (bool) envfree;
+    function investedValue(address) external returns (uint256) envfree;
+    function isAuthorized(address, bytes4) external returns (bool) envfree;
+    function getPriceFeed(address, address) external returns (address) envfree;
+    function getPrice(address, address) external returns (uint256) envfree;
+    function setSwapFee(uint256, uint256, address, uint256) external;
 
     // Price oracle & helpers
-    oracle._getFeedData(address) returns (uint256, uint256) envfree
-    oracle.getFeedDecimals(address) returns (uint256) envfree
-    oracle.getERC20Decimals(address) returns (uint256) envfree
-    oracle.pow10(uint256) returns (uint256) envfree
-    oracle.balanceOfToken(address, address) returns(uint256) envfree
-    oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
-    oracle.uint32Sol(uint256) returns (uint32) envfree
-    oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
-    oracle.mulDownFP(uint256, uint256) returns (uint256) envfree
-    oracle.pivot() returns(address) envfree
+    function oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    function oracle.getFeedDecimals(address) external returns (uint256) envfree;
+    function oracle.getERC20Decimals(address) external returns (uint256) envfree;
+    function oracle.pow10(uint256) external returns (uint256) envfree;
+    function oracle.balanceOfToken(address, address) external returns(uint256) envfree;
+    function oracle.uint32ToBytes4(uint32) external returns (bytes4) envfree;
+    function oracle.uint32Sol(uint256) external returns (uint32) envfree;
+    function oracle.getERC20Allowance(address, address, address) external returns (uint256) envfree;
+    function oracle.mulDownFP(uint256, uint256) external returns (uint256) envfree;
+    function oracle.pivot() external returns(address) envfree;
 
     //Native token helper
-    getNativeBalanceOf(address, address) returns (uint256) envfree
+    function getNativeBalanceOf(address, address) external returns (uint256) envfree;
 }
 
 /**************************************************
@@ -82,13 +82,13 @@ definition select_wrap() returns uint32 = 0x109b3c83;
 definition select_unwrap() returns uint32 = 0xb413148e;
 definition select_setPriceFeeds() returns uint32 = 0x4ed31090;
 // also we can use the following writing:
-//definition select_setPriceFeeds() returns uint32 = setPriceFeeds(address[],address[],address[]).selector;
+//definition select_setPriceFeeds() returns uint32 = sig:setPriceFeeds(address[],address[],address[]).selector;
 
 definition delegateCalls(method f) returns bool = 
-    (f.selector == join(address,address[],uint256[],uint256,bytes).selector ||
-    f.selector == claim(address,bytes).selector ||
-    f.selector == exit(address,address[],uint256[],uint256,bytes).selector ||
-    f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector);
+    (f.selector == sig:join(address,address[],uint256[],uint256,bytes).selector ||
+    f.selector == sig:claim(address,bytes).selector ||
+    f.selector == sig:exit(address,address[],uint256[],uint256,bytes).selector ||
+    f.selector == sig:swap(uint8,address,address,uint256,SmartVaultHarness.SwapLimit,uint256,bytes).selector);
 
 definition FixedPoint_ONE() returns uint256 = 1000000000000000000;
 
@@ -102,13 +102,15 @@ ghost mapping(address => mapping(bytes4 => bool)) ghostAuthorized {
 }
 
 hook Sstore authorized[KEY address who][KEY bytes4 what] bool value (bool old_value) STORAGE {
-    bytes4 what_prime = what & 0xffffffff;
-    ghostAuthorized[who][what_prime] = value; 
+    // bytes4 what_prime = what & 0xffffffff;
+    // ghostAuthorized[who][what_prime] = value;
+    ghostAuthorized[who][what] = value;
 }
 
 hook Sload bool value authorized[KEY address who][KEY bytes4 what] STORAGE {
-    bytes4 what_prime = what & 0xffffffff;
-    require ghostAuthorized[who][what_prime] == value; 
+    // bytes4 what_prime = what & 0xffffffff;
+    // require ghostAuthorized[who][what_prime] == value; 
+    require ghostAuthorized[who][what] == value;
 } 
 
 /**************************************************
@@ -132,9 +134,12 @@ function doubleAddressAuthorization(address who1, address who2, bytes4 what) {
 // A helper function to set a unique authorized address (who)
 // for **any** function signature (what)
 function singleAddressGetsTotalControl(address who) {
+    // require forall address user.
+    //             forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig & 0xffffffff]);
+    // require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig & 0xffffffff]);
     require forall address user.
-                forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig & 0xffffffff]);
-    require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig & 0xffffffff]);
+                forall bytes4 func_sig. (user != who => !ghostAuthorized[user][func_sig]);
+    require forall bytes4 func_sig. (!ghostAuthorized[ANY_ADDRESS()][func_sig]);
 }
 
 // Realistic value for the decimals (4<=dec<=27)
@@ -165,7 +170,7 @@ function matchMutualPrices(address base, address quote) returns bool {
     uint256 price2; uint256 dec2;
     price1, dec1 = oracle._getFeedData(feed1);
     price2, dec2 = oracle._getFeedData(feed2);
-    return (price1 * price2 == oracle.pow10(dec1 + dec2));
+    return (require_uint256(price1 * price2) == oracle.pow10(require_uint256(dec1 + dec2)));
 }
 
 // Forces the price feed provider to go through the pivot feed for
@@ -224,8 +229,8 @@ rule collectTransferIntegrity(address token, address from, uint256 amount) {
         assert fromBalance1 == fromBalance2;
     }
     else {
-        assert fromBalance2 == fromBalance1 - amount;
-        assert vaultBalance2 == vaultBalance1 + amount;
+        assert to_mathint(fromBalance2) == (fromBalance1 - amount);
+        assert to_mathint(vaultBalance2) == (vaultBalance1 + amount);
     }
 
     assert fromBalanceAny1 == fromBalanceAny2;
@@ -262,8 +267,8 @@ rule withdrawTransferIntegrity(address token, address to, uint256 amount) {
         assert toBalance2 == toBalance1;
     }
     else {
-        assert toBalance2 == toBalance1 + amount;
-        assert vaultBalance2 == vaultBalance1 - amount;
+        assert to_mathint(toBalance2) == (toBalance1 + amount);
+        assert to_mathint(vaultBalance2) == (vaultBalance1 - amount);
     }
     
     assert toBalanceAny1 == toBalanceAny2;
@@ -300,12 +305,12 @@ rule withdrawTransferIntegrityOfNativeToken(address nativeToken, address to, uin
         assert toBalance2 == toBalance1;
     }
     else {
-        assert toBalance2 == toBalance1 + amount;
-        assert vaultBalance2 == vaultBalance1 - amount;
+        assert to_mathint(toBalance2) == (toBalance1 + amount);
+        assert to_mathint(vaultBalance2) == (vaultBalance1 - amount);
     }
     
     if(anyToken == WRToken && to == WRToken) {
-        assert vaultBalanceAny2 - vaultBalanceAny1 == amount;
+        assert vaultBalanceAny2 - vaultBalanceAny1 == to_mathint(amount);
     }
     else {
         assert vaultBalanceAny1 == vaultBalanceAny2;
@@ -346,12 +351,12 @@ rule sanity(method f) {
 }
 
 rule sanityFiltered(method f)
-filtered {f -> f.selector == claim(address,bytes).selector || 
-              f.selector == bridge(uint8,uint256,address,uint256,uint8,uint256,bytes).selector || 
-              f.selector == join(address,address[],uint256[],uint256,bytes).selector ||
-              f.selector == exit(address,address[],uint256[],uint256,bytes).selector ||
-              f.selector == swap(uint8,address,address,uint256,uint8,uint256,bytes).selector ||
-              f.selector == wrap(uint256,bytes).selector}
+filtered {f -> f.selector == sig:claim(address,bytes).selector || 
+              f.selector == sig:bridge(uint8,uint256,address,uint256,SmartVaultHarness.BridgeLimit,uint256,bytes).selector || 
+              f.selector == sig:join(address,address[],uint256[],uint256,bytes).selector ||
+              f.selector == sig:exit(address,address[],uint256[],uint256,bytes).selector ||
+              f.selector == sig:swap(uint8,address,address,uint256,SmartVaultHarness.SwapLimit,uint256,bytes).selector ||
+              f.selector == sig:wrap(uint256,bytes).selector}
 {
     env e;
     calldataarg args;
@@ -386,9 +391,9 @@ rule ghostAuthorizationConsistency() {
 
 rule onlyAuthUserCanCallFunctions(method f) 
 filtered {f -> !f.isView && !f.isFallback &&
-                f.selector != paySwapFee(address,uint256).selector &&
-                f.selector != initialize(address).selector &&
-                f.selector != setPriceFeeds(address[],address[],address[]).selector} {
+                f.selector != sig:paySwapFee(address,uint256).selector &&
+                f.selector != sig:initialize(address).selector &&
+                f.selector != sig:setPriceFeeds(address[],address[],address[]).selector} {
     // this rule checks that only authorized user can run all the methods in the contract without reverting
     // all the other users when trying to execute any method should revert
     // therefore the rule should only fail on
@@ -433,10 +438,10 @@ rule uniqueAddressChangesPriceFeed(method f) {
 }
 
 rule uniquenessOfAuthorization(method f, method g) 
-filtered{f -> (!f.isView && f.selector != authorize(address,bytes4).selector)
+filtered{f -> (!f.isView && f.selector != sig:authorize(address,bytes4).selector)
 ,g -> !g.isView} {
-//filtered{f -> f.selector == setPriceFeed(address, address, address).selector,
-//g -> g.selector == setSwapFee(uint256, uint256, address, uint256).selector}{
+//filtered{f -> f.selector == sig:setPriceFeed(address, address, address).selector,
+//g -> g.selector == sig:setSwapFee(uint256, uint256, address, uint256).selector}{
     env ef;
     env eg;
     calldataarg args_f;
@@ -444,7 +449,7 @@ filtered{f -> (!f.isView && f.selector != authorize(address,bytes4).selector)
     // Unique address authorization for the called methods.
     singleAddressAuthorization(ef.msg.sender, oracle.uint32ToBytes4(f.selector));
     singleAddressAuthorization(eg.msg.sender, oracle.uint32ToBytes4(g.selector));
-    bool authorized_G = ghostAuthorized[eg.msg.sender][g.selector];
+    bool authorized_G = ghostAuthorized[eg.msg.sender][oracle.uint32ToBytes4(g.selector)];
 
     // Call f, g
     f(ef, args_f);
@@ -530,10 +535,10 @@ rule getPriceMutuallyRevert(address base, address quote) {
 // delegatecall since it can potentially change the price feeds addresses and
 // therefore the oracle prices for any pair.
 invariant tokensPriceReciprocity(address base, address quote)
-     matchMutualPrices(base, quote)
+     matchMutualPrices(base, quote);
 
 rule feedDecimalsCannotChange(method f, address feed) 
-filtered{f -> !f.isView && f.selector != setPriceFeed(address,address,address).selector} 
+filtered{f -> !f.isView && f.selector != sig:setPriceFeed(address,address,address).selector} 
 {
     env e;
     calldataarg args;
@@ -614,14 +619,14 @@ rule pivotUnitPriceRelaxed(address base, address quote) {
     (getPrice(base, pivot) == FixedPoint_ONE() &&
     getPrice(quote, pivot) == FixedPoint_ONE()) 
     =>
-    (pairPrice >= (FixedPoint_ONE()*99) / 100 &&
-    pairPrice <= (FixedPoint_ONE()*101) / 100);
+    (to_mathint(pairPrice) >= (FixedPoint_ONE()*99 ) / 100 &&
+     to_mathint(pairPrice) <= (FixedPoint_ONE()*101) / 100);
 }
 
 // Tests the prover's modeling of pow10(x) = 10**x
 rule pow10Integrity(uint256 x, uint256 y) {
-    uint256 z = x+y;
-    assert oracle.pow10(z) == oracle.pow10(x)*oracle.pow10(y);
+    uint256 z = require_uint256(x+y);
+    assert to_mathint(oracle.pow10(z)) == oracle.pow10(x)*oracle.pow10(y);
     assert oracle.pow10(1) == 10;
     assert oracle.pow10(2) == 100;
 }

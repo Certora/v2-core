@@ -1,10 +1,10 @@
 methods {
-    implementationOf(address) returns(address) envfree
-    implementationData(address) envfree
-    clone(address, bytes) returns (address) envfree
-    register(bytes32, address, bool)
-    deprecate(address)
-    isAuthorized(address, bytes4) returns (bool) envfree
+    function implementationOf(address) external returns(address) envfree;
+    function implementationData(address) external returns (bool, bool, bytes32) envfree;
+    function clone(address, bytes) external returns (address) envfree;
+    function register(bytes32, address, bool) external;
+    function deprecate(address) external;
+    function isAuthorized(address, bytes4) external returns (bool) envfree;
 }
 
 rule sanity(method f) {
@@ -21,7 +21,7 @@ rule onlyCloneChangesInstanceImplementation(address instance, method f) {
         f(e, args);
     address implementation2 = implementationOf(instance);
     
-    assert implementation2 != implementation1 => f.selector == clone(address, bytes).selector;
+    assert implementation2 != implementation1 => f.selector == sig:clone(address, bytes).selector;
 }
 
 rule cloneIntegrity(address implementation) {
@@ -141,7 +141,7 @@ rule frontRunning_clone(address impl, method f) {
 }
 
 rule frontRunning_deprecate(address impl, method f) 
-filtered{f -> f.selector != deprecate(address).selector} {
+filtered{f -> f.selector != sig:deprecate(address).selector} {
     env e1; env e2;
     calldataarg args;
     storage initStorage = lastStorage;

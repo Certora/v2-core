@@ -8,7 +8,6 @@ then
     MSG=": $2"
 fi
 
-
 certoraRun  certora/harness/SmartVaultHarnessStrategy.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
             certora/harness/Aave/AaveV2Token.sol \

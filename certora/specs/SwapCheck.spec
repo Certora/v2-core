@@ -12,19 +12,19 @@
 
 ////////////////////////////////////////
 // ERC20 methods
-import "./erc20.spec"
+import "./erc20.spec";
 /**************************************************
  *                LINKED CONTRACTS                *
  **************************************************/
 // Declaration of contracts used in the spec
 
 // using WrappedNativeTokenMock as WRToken
-using SmartVaultHarnessSwap as SmartVault
-using PriceOracleHarness as oracle
-using DummyERC20FeeCollectorMock as FeeCollector
-using DummyERC20A as ERC20A
-using DummyERC20B as ERC20B
-using DexMock as Dex
+using SmartVaultHarnessSwap as SmartVault;
+using PriceOracleHarness as oracle;
+using DummyERC20FeeCollectorMock as FeeCollector;
+using DummyERC20A as ERC20A;
+using DummyERC20B as ERC20B;
+using DexMock as Dex;
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -33,52 +33,52 @@ methods {
 
     ////////////////////////////////////////
 	// ERC20 methods
-    WRToken.balanceOf(address) returns(uint256) envfree
-    mint(address, uint256) => DISPATCHER(true)
-    burn(address, uint256) => DISPATCHER(true)
+    // function WRToken.balanceOf(address) external returns(uint256) envfree;
+    function _.mint(address, uint256) external => DISPATCHER(true);
+    function _.burn(address, uint256) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // SwapConnectorMock methods
     // packages/smart-vault/contracts/test/core/SwapConnectorMock.sol
-    swap(uint8, address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(uint8, address, address, uint256, uint256, bytes) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // DexMock methods (called by SwapConnectorMock)
     // packages/smart-vault/contracts/test/samples/DexMock.sol
-    swap(address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(address, address, uint256, uint256, bytes) external => DISPATCHER(true);
     // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
     //     returns (uint256 amountOut)
 
-    implementationOf(address) returns (address) => DISPATCHER(true)
-    implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
-    ANY_ADDRESS() returns (address) envfree
-    isStrategyAllowed(address) returns (bool) envfree
-    investedValue(address) returns (uint256) envfree
-    isAuthorized(address, bytes4) returns (bool) envfree
-    getPriceFeed(address, address) returns (address) envfree
-    getPrice(address, address) returns (uint256) envfree
-    setSwapFee(uint256, uint256, address, uint256)
+    function _.implementationOf(address) external => DISPATCHER(true);
+    function _.implementationData(address) external => DISPATCHER(true);
+    function ANY_ADDRESS() external returns (address) envfree;
+    function isStrategyAllowed(address) external returns (bool) envfree;
+    function investedValue(address) external returns (uint256) envfree;
+    function isAuthorized(address, bytes4) external returns (bool) envfree;
+    function getPriceFeed(address, address) external returns (address) envfree;
+    function getPrice(address, address) external returns (uint256) envfree;
+    function setSwapFee(uint256, uint256, address, uint256) external;
 
-    getSwapFeePct() returns (uint256) envfree
-    getSwapFeeCap() returns (uint256) envfree
-    getSwapFeeToken() returns (address) envfree
-    getSwapFeePeriod() returns (uint256) envfree
-    getSwapFeeTotalCharged() returns (uint256) envfree
-    getSwapFeeNextResetTime() returns (uint256) envfree
+    function getSwapFeePct() external returns (uint256) envfree;
+    function getSwapFeeCap() external returns (uint256) envfree;
+    function getSwapFeeToken() external returns (address) envfree;
+    function getSwapFeePeriod() external returns (uint256) envfree;
+    function getSwapFeeTotalCharged() external returns (uint256) envfree;
+    function getSwapFeeNextResetTime() external returns (uint256) envfree;
 
-    feeCollector() returns (address) envfree
+    function feeCollector() external returns (address) envfree;
 
     // Price oracle & helpers
-    oracle._getFeedData(address) returns (uint256, uint256) envfree
-    oracle.getFeedDecimals(address) returns (uint256) envfree
-    oracle.getERC20Decimals(address) returns (uint256) envfree
-    oracle.pow10(uint256) returns (uint256) envfree
-    oracle.balanceOfToken(address, address) returns(uint256) envfree
-    oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
-    oracle.uint32Sol(uint256) returns (uint32) envfree
-    oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
-    oracle.mulDownFP(uint256, uint256) returns (uint256) envfree
-    oracle.pivot() returns(address) envfree
+    function oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    function oracle.getFeedDecimals(address) external returns (uint256) envfree;
+    function oracle.getERC20Decimals(address) external returns (uint256) envfree;
+    function oracle.pow10(uint256) external returns (uint256) envfree;
+    function oracle.balanceOfToken(address, address) external returns(uint256) envfree;
+    function oracle.uint32ToBytes4(uint32) external returns (bytes4) envfree;
+    function oracle.uint32Sol(uint256) external returns (uint32) envfree;
+    function oracle.getERC20Allowance(address, address, address) external returns (uint256) envfree;
+    function oracle.mulDownFP(uint256, uint256) external returns (uint256) envfree;
+    function oracle.pivot() external returns(address) envfree;
 }
 
 /**************************************************
@@ -93,7 +93,7 @@ rule swapIntergrity(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
     uint256 amountIn;
-    uint8 limitType;
+    SmartVaultHarnessSwap.SwapLimit limitType;
     uint256 limitAmount;
     bytes data;
      
@@ -117,17 +117,17 @@ rule swapIntergrity(env e, env e2, method f) {
 
     uint256 balanceFCAfter = ERC20B.balanceOf(e, feeCollector());
 
-    uint256 amountOutBeforeFees = balanceOutSmartWaltAfter - balanceOutSmartWaltBefore;
-    uint256 paidFees = balanceFCAfter - balanceFCBefore;
-    uint256 feesAndSwapAmount = paidFees + amountOutBeforeFees;
+    uint256 amountOutBeforeFees = require_uint256(balanceOutSmartWaltAfter - balanceOutSmartWaltBefore);
+    uint256 paidFees = require_uint256(balanceFCAfter - balanceFCBefore);
+    uint256 feesAndSwapAmount = require_uint256(paidFees + amountOutBeforeFees);
 
     // roll back to initial state to calculate fees to check their correctness
     uint256 payFeeResults = payFee(e, tokenOut, feesAndSwapAmount) at initialState;
 
     assert payFeeResults == paidFees;
-    assert balanceFCAfter - balanceFCBefore == paidFees, "Remember, with great power comes great responsibility.";
-    assert balanceOutDexBefore - balanceOutDexAfter == feesAndSwapAmount, "Dex balance should be decreased by amountOut";
-    assert amountOut == balanceOutDexBefore - balanceOutDexAfter - paidFees, "AmountOut should be equal to amountOutBeforeFees + paidFees";
+    assert balanceFCAfter - balanceFCBefore == to_mathint(paidFees), "Remember, with great power comes great responsibility.";
+    assert balanceOutDexBefore - balanceOutDexAfter == to_mathint(feesAndSwapAmount), "Dex balance should be decreased by amountOut";
+    assert to_mathint(amountOut) == balanceOutDexBefore - balanceOutDexAfter - paidFees, "AmountOut should be equal to amountOutBeforeFees + paidFees";
 }
 
 
@@ -138,7 +138,7 @@ rule swapIntergrityTokenIn(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
     uint256 amountIn;
-    uint8 limitType;
+    SmartVaultHarnessSwap.SwapLimit limitType;
     uint256 limitAmount;
     bytes data;
 
@@ -153,8 +153,8 @@ rule swapIntergrityTokenIn(env e, env e2, method f) {
     uint256 balanceInDexAfter = ERC20A.balanceOf(e, Dex);
     uint256 balanceInSmartWaltAfter = ERC20A.balanceOf(e, currentContract);
 
-    assert balanceInDexAfter - balanceInDexBefore == amountIn, "Dex balance should be increased by amountIn";
-    assert balanceInSmartWaltBefore - balanceInSmartWaltAfter == amountIn, "SmartVault balance should be decreased by amountIn";
+    assert balanceInDexAfter - balanceInDexBefore == to_mathint(amountIn), "Dex balance should be increased by amountIn";
+    assert balanceInSmartWaltBefore - balanceInSmartWaltAfter == to_mathint(amountIn), "SmartVault balance should be decreased by amountIn";
 }
 
 
@@ -165,7 +165,7 @@ rule swapIntergrityOthersUntouchable(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
     uint256 amountIn;
-    uint8 limitType;
+    SmartVaultHarnessSwap.SwapLimit limitType;
     uint256 limitAmount;
     bytes data;
 
@@ -197,7 +197,7 @@ rule swapConsistencyTokenIn(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
     uint256 amountIn;
-    uint8 limitType;
+    SmartVaultHarnessSwap.SwapLimit limitType;
     uint256 limitAmount;
     bytes data;
 
@@ -225,7 +225,7 @@ rule swapConsistencyTokenOut(env e, env e2, method f) {
     address tokenIn;
     address tokenOut;
     uint256 amountIn;
-    uint8 limitType;
+    SmartVaultHarnessSwap.SwapLimit limitType;
     uint256 limitAmount;
     bytes data;
 

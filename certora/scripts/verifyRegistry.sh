@@ -3,7 +3,7 @@ certoraRun ./packages/registry/contracts/registry/Registry.sol \
 --solc solc8.2 \
 --loop_iter 2 \
 --optimistic_loop \
---packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi hardhat=packages/swap-connector/node_modules/hardhat \
+--packages @openzeppelin=node_modules/@openzeppelin @mimic-fi=node_modules/@mimic-fi \
 --path . \
 --staging \
 --rule_sanity \

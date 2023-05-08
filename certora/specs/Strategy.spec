@@ -12,7 +12,7 @@
 
 ////////////////////////////////////////
 // ERC20 methods
-import "./erc20.spec"
+import "./erc20.spec";
 /**************************************************
  *                LINKED CONTRACTS                *
  **************************************************/
@@ -20,15 +20,15 @@ import "./erc20.spec"
 
 // using WrappedNativeTokenMock as WRToken
 // using SmartVaultHarnessSwap as SmartVault
-using PriceOracleHarness as Oracle
+using PriceOracleHarness as Oracle;
 // using DummyERC20FeeCollectorMock as FeeCollector
 // using DummyERC20A as ERC20A
-using DummyERC20B as ERC20B
+using DummyERC20B as ERC20B;
 // using DexMock as Dex
-using AaveV2Token as AToken
-using TokenMock as Token
-using incentivesController as IncCont
-using lendingPool as LendingPool
+using AaveV2Token as AToken;
+using TokenMock as Token;
+using incentivesController as IncCont;
+using lendingPool as LendingPool;
 
 /**************************************************
  *              METHODS DECLARATIONS              *
@@ -37,52 +37,52 @@ methods {
 
     ////////////////////////////////////////
 	// ERC20 methods
-    WRToken.balanceOf(address) returns(uint256) envfree
-    mint(address, uint256) => DISPATCHER(true)
-    burn(address, uint256) => DISPATCHER(true)
+    // function WRToken.balanceOf(address) external returns(uint256) envfree;
+    function _.mint(address, uint256) external => DISPATCHER(true);
+    function _.burn(address, uint256) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // SwapConnectorMock methods
     // packages/smart-vault/contracts/test/core/SwapConnectorMock.sol
-    swap(uint8, address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(uint8, address, address, uint256, uint256, bytes) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // DexMock methods (called by SwapConnectorMock)
     // packages/smart-vault/contracts/test/samples/DexMock.sol
-    swap(address, address, uint256, uint256, bytes) returns (uint256) => DISPATCHER(true)
+    function _.swap(address, address, uint256, uint256, bytes) external => DISPATCHER(true);
     // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
     //     returns (uint256 amountOut)
 
-    implementationOf(address) returns (address) => DISPATCHER(true)
-    implementationData(address) returns (bool, bool, bytes32) => DISPATCHER(true)
-    ANY_ADDRESS() returns (address) envfree
-    isStrategyAllowed(address) returns (bool) envfree
-    investedValue(address) returns (uint256) envfree
-    isAuthorized(address, bytes4) returns (bool) envfree
-    getPriceFeed(address, address) returns (address) envfree
-    getPrice(address, address) returns (uint256) envfree
-    setSwapFee(uint256, uint256, address, uint256)
-    incentivesController() returns (address) envfree
-    feeCollector() returns (address) envfree
-    lastValue(address) returns(uint256) envfree
+    function _.implementationOf(address) external => DISPATCHER(true);
+    function _.implementationData(address) external => DISPATCHER(true);
+    function ANY_ADDRESS() external returns (address) envfree;
+    function isStrategyAllowed(address) external returns (bool) envfree;
+    function investedValue(address) external returns (uint256) envfree;
+    function isAuthorized(address, bytes4) external returns (bool) envfree;
+    function getPriceFeed(address, address) external returns (address) envfree;
+    function getPrice(address, address) external returns (uint256) envfree;
+    function setSwapFee(uint256, uint256, address, uint256) external;
+    function incentivesController() external returns (address) envfree;
+    function feeCollector() external returns (address) envfree;
+    function lastValue(address) external returns(uint256) envfree;
 
     // Price Oracle & helpers
-    Oracle._getFeedData(address) returns (uint256, uint256) envfree
-    Oracle.getFeedDecimals(address) returns (uint256) envfree
-    Oracle.getERC20Decimals(address) returns (uint256) envfree
-    Oracle.pow10(uint256) returns (uint256) envfree
-    Oracle.balanceOfToken(address, address) returns(uint256) envfree
-    Oracle.uint32ToBytes4(uint32) returns (bytes4) envfree
-    Oracle.uint32Sol(uint256) returns (uint32) envfree
-    Oracle.getERC20Allowance(address, address, address) returns (uint256) envfree
-    Oracle.mulDownFP(uint256, uint256) returns (uint256) envfree
-    Oracle.pivot() returns(address) envfree
+    function Oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    function Oracle.getFeedDecimals(address) external returns (uint256) envfree;
+    function Oracle.getERC20Decimals(address) external returns (uint256) envfree;
+    function Oracle.pow10(uint256) external returns (uint256) envfree;
+    function Oracle.balanceOfToken(address, address) external returns(uint256) envfree;
+    function Oracle.uint32ToBytes4(uint32) external returns (bytes4) envfree;
+    function Oracle.uint32Sol(uint256) external returns (uint32) envfree;
+    function Oracle.getERC20Allowance(address, address, address) external returns (uint256) envfree;
+    function Oracle.mulDownFP(uint256, uint256) external returns (uint256) envfree;
+    function Oracle.pivot() external returns(address) envfree;
 
-    IncCont.getUserUnclaimedRewards(address) returns(uint256) envfree
+    function IncCont.getUserUnclaimedRewards(address) external returns(uint256) envfree;
 
-    LendingPool.getReserveDataAToken(address) returns(address) envfree
+    function LendingPool.getReserveDataAToken(address) external returns(address) envfree;
 
-    deposit() => DISPATCHER(true)
+    function _.deposit() external => DISPATCHER(true);
 }
 
 
@@ -97,8 +97,8 @@ methods {
 // lendingPool.reserveData[asset].aTokenAddress matches the aToken address in SmartVault
 rule LendPoolAndSmartVaulrMatch(env e, method f) filtered 
 { 
-    f -> f.selector != 0xcc58002c    // sighash of call(address,bytes,uint256,bytes)  
-    &&  f.selector != bridge(uint8,uint256,address,uint256,uint8,uint256,bytes).selector    // removing bridge() because it fails reachability
+    f -> f.selector != sig:call(address,bytes,uint256,bytes).selector // 0xcc58002c    // sighash of call(address,bytes,uint256,bytes)  
+    &&  f.selector != sig:bridge(uint8,uint256,address,uint256,SmartVaultHarnessStrategy.BridgeLimit,uint256,bytes).selector    // removing bridge() because it fails reachability
 } {
     require LendingPool.getReserveDataAToken(Token) == aToken(e);
 
@@ -138,8 +138,8 @@ rule joinIntergrity_investedValueAndATokenBalance(env e) {
     uint256 investedValueAfter = investedValue(strategy);
     uint256 aTokenBalanceAfter = AToken.balanceOf(e, currentContract);
 
-    assert investedValueAfter - investedValueBefore == amountOut, "Remember, with great power comes great responsibility.";
-    assert aTokenBalanceAfter - aTokenBalanceBefore == amountOut, "Remember, with great power comes great responsibility.";
+    assert investedValueAfter - investedValueBefore == to_mathint(amountOut), "Remember, with great power comes great responsibility.";
+    assert aTokenBalanceAfter - aTokenBalanceBefore == to_mathint(amountOut), "Remember, with great power comes great responsibility.";
 }
 
 
@@ -169,8 +169,8 @@ rule joinIntergrity_tokenBalance(env e,env e2) {
     uint256 tokenBalanceCCAfter = Token.balanceOf(e, currentContract);
     uint256 tokenBalanceATokenAfter = Token.balanceOf(e, aToken(e));
 
-    assert tokenBalanceCCBefore - tokenBalanceCCAfter == amountOut, "Remember, with great power comes great responsibility.";
-    assert tokenBalanceATokenAfter - tokenBalanceATokenBefore == amountOut, "Remember, with great power comes great responsibility.";
+    assert tokenBalanceCCBefore - tokenBalanceCCAfter == to_mathint(amountOut), "Remember, with great power comes great responsibility.";
+    assert tokenBalanceATokenAfter - tokenBalanceATokenBefore == to_mathint(amountOut), "Remember, with great power comes great responsibility.";
     assert amountsIn[0] == amountOut, "Remember, with great power comes great responsibility.";     // broken becuase of the bug in CVL with arrays
 }
 
@@ -184,7 +184,7 @@ rule joinIntergrity_bigVsSmalls(env e) {
     uint256 slippage;
     bytes data;
 
-    require amountsInBig[0] == amountsInSmall1[0] + amountsInSmall2[0];  
+    require to_mathint(amountsInBig[0]) == amountsInSmall1[0] + amountsInSmall2[0];  
     require amountsInBig.length < 10;       // bug workaround
     require amountsInSmall1.length < 10;    // bug workaround
     require amountsInSmall2.length < 10;    // bug workaround
@@ -322,7 +322,7 @@ rule claimIntergrity_noMoreThanUnclaimedRewards(env e) {
 
     uint256 rewardBalanceAfter = ERC20B.balanceOf(e, currentContract);
 
-    assert rewardBalanceAfter - rewardBalanceBefore <= unclaimedRewards, "Remember, with great power comes great responsibility.";
+    assert rewardBalanceAfter - rewardBalanceBefore <= to_mathint(unclaimedRewards), "Remember, with great power comes great responsibility.";
 }
 
 
@@ -346,8 +346,8 @@ rule claimIntergrity_balancesUpdate(env e) {
     uint256 rewardBalanceSmartVaultAfter = ERC20B.balanceOf(e, currentContract);
     uint256 rewardBalanceIncContAfter = ERC20B.balanceOf(e, incentivesController());
 
-    assert rewardBalanceIncContBefore - rewardBalanceIncContAfter == unclaimedRewards, "Remember, with great power comes great responsibility.";
-    assert rewardBalanceSmartVaultAfter - rewardBalanceSmartVaultBefore == unclaimedRewards, "Remember, with great power comes great responsibility.";
+    assert rewardBalanceIncContBefore - rewardBalanceIncContAfter == to_mathint(unclaimedRewards), "Remember, with great power comes great responsibility.";
+    assert rewardBalanceSmartVaultAfter - rewardBalanceSmartVaultBefore == to_mathint(unclaimedRewards), "Remember, with great power comes great responsibility.";
 }
 
 
@@ -448,11 +448,11 @@ rule exitIntergrity_tokenBalance(env e, env e2) {
     uint256 tokenBalanceATokenAfter = Token.balanceOf(e, aToken(e));
     uint256 tokenBalanceFeeAfter = Token.balanceOf(e, feeCollector());
 
-    uint256 paidFees = to_uint256(tokenBalanceFeeAfter - tokenBalanceFeeBefore);
-    uint256 exitTogether = to_uint256(amountOut + paidFees);
+    uint256 paidFees = require_uint256(tokenBalanceFeeAfter - tokenBalanceFeeBefore);
+    uint256 exitTogether = require_uint256(amountOut + paidFees);
 
-    assert tokenBalanceCCAfter - tokenBalanceCCBefore == amountOut, "Remember, with great power comes great responsibility.";
-    assert tokenBalanceATokenBefore - tokenBalanceATokenAfter == exitTogether, "Remember, with great power comes great responsibility.";
+    assert tokenBalanceCCAfter - tokenBalanceCCBefore == to_mathint(amountOut), "Remember, with great power comes great responsibility.";
+    assert tokenBalanceATokenBefore - tokenBalanceATokenAfter == to_mathint(exitTogether), "Remember, with great power comes great responsibility.";
     assert amountsIn[0] == exitTogether, "Remember, with great power comes great responsibility.";
 }
 
@@ -484,7 +484,7 @@ rule exitIntergrity_investedValueAndATokenBalance(env e) {
     uint256 aTokenBalanceAfter = AToken.balanceOf(e, currentContract);
 
     assert investedValueAfter <= investedValueBefore, "Remember, with great power comes great responsibility.";
-    assert aTokenBalanceBefore - aTokenBalanceAfter == amountsIn[0], "Remember, with great power comes great responsibility.";
+    assert aTokenBalanceBefore - aTokenBalanceAfter == to_mathint(amountsIn[0]), "Remember, with great power comes great responsibility.";
 }
 
 
@@ -565,9 +565,9 @@ rule exitIntergrity_checkingConditions(env e,env e2) {
     uint256 lastValueAfter = lastValue(strategy);
     uint256 investedValueAfter = investedValue(strategy);
 
-    uint256 paidFees = to_uint256(tokenBalanceFeeAfter - tokenBalanceFeeBefore);
-    uint256 calculatedValue = to_uint256(tokenBalanceATokenBefore - tokenBalanceATokenAfter);
-    uint256 valueGains = to_uint256(lastValueBefore - investedValueBefore);
+    uint256 paidFees = require_uint256(tokenBalanceFeeAfter - tokenBalanceFeeBefore);
+    uint256 calculatedValue = require_uint256(tokenBalanceATokenBefore - tokenBalanceATokenAfter);
+    uint256 valueGains = require_uint256(lastValueBefore - investedValueBefore);
 
     assert tokenBalanceATokenBefore <= investedValueBefore => tokenBalanceFeeBefore == tokenBalanceFeeAfter, "Remember, with great power comes great responsibility.";
     assert lastValueBefore > investedValueBefore && valueGains < calculatedValue => investedValueBefore > investedValueAfter;  // checking fees is more complicated becuse there are more variables involved in caclculations
@@ -604,13 +604,13 @@ rule frontrunJoinCheck(env e, method f) {
 
     tokenOut, amountOutMain = joinHarness(e, mainStrategy, tokensInMain, amountsInMain, slippage, data);
 
-    require f.selector == join(address, address[], uint256[], uint256, bytes).selector 
-            || f.selector == claim(address, bytes).selector 
-            || f.selector == exit(address, address[], uint256[], uint256, bytes).selector;
+    require f.selector == sig:join(address, address[], uint256[], uint256, bytes).selector 
+            || f.selector == sig:claim(address, bytes).selector 
+            || f.selector == sig:exit(address, address[], uint256[], uint256, bytes).selector;
     
-    if (f.selector == join(address, address[], uint256[], uint256, bytes).selector) {
+    if (f.selector == sig:join(address, address[], uint256[], uint256, bytes).selector) {
         joinHarness(e, frontStrategy, tokensInFront, amountsInFront, slippage, data) at initialStorage;
-    } else if (f.selector == claim(address, bytes).selector) {
+    } else if (f.selector == sig:claim(address, bytes).selector) {
         claimHarness(e, frontStrategy, data) at initialStorage;
     } else {
         exitHarness(e, frontStrategy, tokensInFront, amountsInFront, slippage, data) at initialStorage;
@@ -625,10 +625,10 @@ rule frontrunJoinCheck(env e, method f) {
 // STATUS - verified
 // Other functions cannot frontrun claim
 rule noClaimFrontrun(env e, method f)
-    filtered { f -> f.selector != claim(address, bytes).selector            // 2 claims can affect each other if 2 different strategies managed by the same vault. So we don't check it
-                    && f.selector != claimHarness(address,bytes).selector   // 2 claims can affect each other if 2 different strategies managed by the same vault. So we don't check it
-                    && f.selector != 0xcc58002c    // sighash of call(address,bytes,uint256,bytes)   // low-level call need to ask team what to do with it
-                    && f.selector != bridge(uint8,uint256,address,uint256,uint8,uint256,bytes).selector  // do we have a solution for it?
+    filtered { f -> f.selector != sig:claim(address, bytes).selector            // 2 claims can affect each other if 2 different strategies managed by the same vault. So we don't check it
+                    && f.selector != sig:claimHarness(address,bytes).selector   // 2 claims can affect each other if 2 different strategies managed by the same vault. So we don't check it
+                    && f.selector != sig:call(address,bytes,uint256,bytes).selector // 0xcc58002c    // sighash of call(address,bytes,uint256,bytes)   // low-level call need to ask team what to do with it
+                    && f.selector != sig:bridge(uint8,uint256,address,uint256,SmartVaultHarnessStrategy.BridgeLimit,uint256,bytes).selector  // do we have a solution for it?
 } {
     address mainStrategy; address frontStrategy;
     address[] tokensInFront;
@@ -648,9 +648,9 @@ rule noClaimFrontrun(env e, method f)
 
     tokenOut, amountOutMain = claimHarness(e, mainStrategy, data);
 
-    if (f.selector == join(address, address[], uint256[], uint256, bytes).selector) {
+    if (f.selector == sig:join(address, address[], uint256[], uint256, bytes).selector) {
         joinHarness(e, frontStrategy, tokensInFront, amountsInFront, slippage, data) at initialStorage;
-    } else if (f.selector == exit(address, address[], uint256[], uint256, bytes).selector) {
+    } else if (f.selector == sig:exit(address, address[], uint256[], uint256, bytes).selector) {
         exitHarness(e, frontStrategy, tokensInFront, amountsInFront, slippage, data) at initialStorage;
     } else {
         calldataarg args; 
