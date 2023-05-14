@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.2;
 
-// import '../munged/PriceOracle.sol';  // CVL1
-import '../../packages/price-oracle/contracts/oracle/PriceOracle.sol'; // CVL2
+import '../munged/PriceOracle.sol';
 import '@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol';
 
 contract PriceOracleHarness is PriceOracle {
@@ -23,18 +22,11 @@ contract PriceOracleHarness is PriceOracle {
     // decimals = 8
     // so actual price: 1 ETH = 1193.48 USD
 
-    // CVL1:
     // Certora : replace Aggregator interface with mappings.
-    // function _getFeedData(address feed) public override view returns (uint256 price, uint256 decimals) {
-    //     decimals = oracleDecimals[feed];
-    //     price = SafeCast.toUint256(oracleRoundData[feed]);
-    // }
-
-    // CVL2:
-    function getFeedData(address feed) public view returns (uint256 price, uint256 decimals) {
-        return _getFeedData(feed);
+    function _getFeedData(address feed) public override view returns (uint256 price, uint256 decimals) {
+        decimals = oracleDecimals[feed];
+        price = SafeCast.toUint256(oracleRoundData[feed]);
     }
-
 
     function getFeedDecimals(address feed) public view returns (uint256) {
         return oracleDecimals[feed];

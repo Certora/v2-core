@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.2;
 
-// import '../munged/SmartVault.sol';  // CVL1
-import '../../packages/smart-vault/contracts/SmartVault.sol';  // CVL2
+import '../munged/SmartVault.sol';
 
 contract SmartVaultHarness is SmartVault {
 
@@ -17,7 +16,6 @@ contract SmartVaultHarness is SmartVault {
             aaveStrategy = _aaveStategy;
     }
     
-    /*
     function join(
         address,
         address[] memory tokensIn,
@@ -45,9 +43,7 @@ contract SmartVaultHarness is SmartVault {
         investedValue[strategy] = investedValue[strategy] + value;
         emit Join(strategy, tokensIn, amountsIn, tokensOut, amountsOut, value, slippage, data);
     }
-    */
 
-    /*
     function exit(
         address,
         address[] memory tokensIn,
@@ -106,9 +102,7 @@ contract SmartVaultHarness is SmartVault {
 
         //emit Exit(strategy, tokensIn, amountsIn, tokensOut, amountsOut, value, performanceFeeAmounts, slippage, data);
     }
-    */
 
-    /*
     function claim(address, bytes memory data)
         external
         override
@@ -128,7 +122,6 @@ contract SmartVaultHarness is SmartVault {
         (tokens, amounts) = abi.decode(returndata, (address[], uint256[]));
         emit Claim(strategy, tokens, amounts, data);
     }
-    */
 
     function paySwapFee(address token, uint256 amount) external returns (uint256 paidAmount) {
         return _payFee(token, amount, swapFee);

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.2;
 
-// import '../munged/SmartVault.sol';  // CVL1
-import '../../packages/smart-vault/contracts/SmartVault.sol';  // CVL2
+import '../munged/SmartVault.sol';
 import '../../packages/strategies/contracts/aave-v2/IAaveV2Pool.sol';
 import '../../packages/strategies/contracts/aave-v2/IAaveV2Token.sol';
 import '../../packages/strategies/contracts/aave-v2/IAaveV2IncentivesController.sol';
@@ -46,22 +45,19 @@ contract SmartVaultHarnessStrategy is SmartVault {
         address[] memory tokensOut = new address[](1);
         uint256[] memory amountsOut = new uint256[](1);
 
-        // (tokensOut, amountsOut) = join(strategy, tokensIn, amountsIn, slippage, data);  // CVL1
-        (tokensOut, amountsOut) = join2(strategy, tokensIn, amountsIn, slippage, data);  // CVL2
+        (tokensOut, amountsOut) = join(strategy, tokensIn, amountsIn, slippage, data);
 
         tokenOut = tokensOut[0];
         amountOut = amountsOut[0];
     }
 
-    // CVL2: no override of join()
-    // function join(
-    function join2(
+    function join(
         address strategy,
         address[] memory tokensIn,
         uint256[] memory amountsIn,
         uint256 slippage,
         bytes memory data
-    ) public auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
+    ) public override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         require(slippage <= FixedPoint.ONE, 'JOIN_SLIPPAGE_ABOVE_ONE');
         require(tokensIn.length == amountsIn.length, 'JOIN_INPUT_INVALID_LENGTH');
@@ -86,23 +82,20 @@ contract SmartVaultHarnessStrategy is SmartVault {
         address[] memory tokensOut = new address[](1);
         uint256[] memory amountsOut = new uint256[](1);
 
-        // (tokensOut, amountsOut) = exit(strategy, tokensIn, amountsIn, slippage, data);  // CVL1
-        (tokensOut, amountsOut) = exit2(strategy, tokensIn, amountsIn, slippage, data);  // CVL2
+        (tokensOut, amountsOut) = exit(strategy, tokensIn, amountsIn, slippage, data);
 
         tokenOut = tokensOut[0];
         amountOut = amountsOut[0];
     }
 
 
-    // CVL2: no override of exit()
-    // function exit(
-    function exit2(
+    function exit(
         address strategy,
         address[] memory tokensIn,
         uint256[] memory amountsIn,
         uint256 slippage,
         bytes memory data
-    ) public auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
+    ) public override auth returns (address[] memory tokensOut, uint256[] memory amountsOut) {
         require(isStrategyAllowed[strategy], 'STRATEGY_NOT_ALLOWED');
         require(investedValue[strategy] > 0, 'EXIT_NO_INVESTED_VALUE');
         require(slippage <= FixedPoint.ONE, 'EXIT_SLIPPAGE_ABOVE_ONE');
@@ -114,8 +107,7 @@ contract SmartVaultHarnessStrategy is SmartVault {
         uint256[] memory performanceFeeAmounts = new uint256[](amountsOut.length);
 
         // It can rely on the last updated value since we have just exited, no need to compute current value
-        // uint256 valueBeforeExit = lastValue(strategy) + value;  // CVL1
-        uint256 valueBeforeExit = lastValue2(strategy) + value;  // CVL2
+        uint256 valueBeforeExit = lastValue(strategy) + value;
         if (valueBeforeExit <= investedValue[strategy]) {
             // There were losses, invested value is simply reduced using the exited ratio compared to the value
             // before exit. Invested value is round up to avoid interpreting losses due to rounding errors
@@ -154,18 +146,16 @@ contract SmartVaultHarnessStrategy is SmartVault {
         address[] memory tokensOut = new address[](1);
         uint256[] memory amountsOut = new uint256[](1);
 
-        // (tokensOut, amountsOut) = claim(strategy, data);  // CVL1
-        (tokensOut, amountsOut) = claim2(strategy, data);  // CVL2
+        (tokensOut, amountsOut) = claim(strategy, data);
 
         tokenOut = tokensOut[0];
         amountOut = amountsOut[0];
     }
 
 
-    // CVL2: no override of claim()
-    // function claim(address strategy, bytes memory data)
-    function claim2(address strategy, bytes memory data)
+     function claim(address strategy, bytes memory data)
         public
+        override
         auth
         returns (address[] memory tokens, uint256[] memory amounts)
     {
@@ -203,15 +193,13 @@ contract SmartVaultHarnessStrategy is SmartVault {
         return FixedPoint.ONE;
     }
 
-    // CVL2: no overriding of lastValue()
     /**
      * @dev Tells how much value the strategy has over time.
      * For example, if a strategy has a value of 100 in T0, and then it has a value of 120 in T1,
      * It means it gained a 20% between T0 and T1 due to the appreciation of the aToken and AAVE rewards.
      * @param `account` Address of the account querying the last value of
      */
-    // function lastValue(address) public view override returns (uint256) {
-    function lastValue2(address) public view returns (uint256) {
+    function lastValue(address) public view override returns (uint256) {
         return aToken.balanceOf(address(this));
     }
 

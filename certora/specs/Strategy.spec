@@ -64,10 +64,12 @@ methods {
     function setSwapFee(uint256, uint256, address, uint256) external;
     function incentivesController() external returns (address) envfree;
     function feeCollector() external returns (address) envfree;
-    function lastValue(address) external returns(uint256) envfree;
+    // function lastValue(address) external returns(uint256) envfree;
+    function lastValue2(address) external returns(uint256) envfree;
 
     // Price Oracle & helpers
-    function Oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    // function Oracle._getFeedData(address) external returns (uint256, uint256) envfree;  // CVL1
+    function Oracle._getFeedData(address) internal returns (uint256, uint256);  // CVL2
     function Oracle.getFeedDecimals(address) external returns (uint256) envfree;
     function Oracle.getERC20Decimals(address) external returns (uint256) envfree;
     function Oracle.pow10(uint256) external returns (uint256) envfree;
@@ -555,14 +557,16 @@ rule exitIntergrity_checkingConditions(env e,env e2) {
 
     uint256 investedValueBefore = investedValue(strategy);
     uint256 tokenBalanceATokenBefore = AToken.balanceOf(e, currentContract);
-    uint256 lastValueBefore = lastValue(strategy);
+    // uint256 lastValueBefore = lastValue(strategy);  // CVL1
+    uint256 lastValueBefore = lastValue2(strategy);  // CVL2
     uint256 tokenBalanceFeeBefore = Token.balanceOf(e, feeCollector());
 
     tokenOut, amountOut = exitHarness(e2, strategy, tokensIn, amountsIn, slippage, data);
 
     uint256 tokenBalanceATokenAfter = AToken.balanceOf(e, currentContract);
     uint256 tokenBalanceFeeAfter = Token.balanceOf(e, feeCollector());
-    uint256 lastValueAfter = lastValue(strategy);
+    // uint256 lastValueAfter = lastValue(strategy);  // CVL1
+    uint256 lastValueAfter = lastValue2(strategy);  // CVL2
     uint256 investedValueAfter = investedValue(strategy);
 
     uint256 paidFees = require_uint256(tokenBalanceFeeAfter - tokenBalanceFeeBefore);

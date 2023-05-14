@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.2;
 
-// import '../munged/SmartVault.sol';  // CVL1
-import '../../packages/smart-vault/contracts/SmartVault.sol';  // CVL2
+import '../munged/SmartVault.sol';
 
 import '../../packages/smart-vault/contracts/test/samples/DexMock.sol';
 

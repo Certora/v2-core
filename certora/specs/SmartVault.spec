@@ -55,7 +55,8 @@ methods {
     function setSwapFee(uint256, uint256, address, uint256) external;
 
     // Price oracle & helpers
-    function oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    // function oracle._getFeedData(address) external returns (uint256, uint256) envfree;  // CVL1
+    function oracle.getFeedData(address) external returns (uint256, uint256) envfree;  // CVL2
     function oracle.getFeedDecimals(address) external returns (uint256) envfree;
     function oracle.getERC20Decimals(address) external returns (uint256) envfree;
     function oracle.pow10(uint256) external returns (uint256) envfree;
@@ -158,7 +159,8 @@ function matchDecimals(address base, address quote) {
 function getFeedPrice(address base, address quote) returns uint256 {
     uint256 price;
     uint256 decimal;
-    price, decimal = oracle._getFeedData(getPriceFeed(base, quote));
+    // price, decimal = oracle._getFeedData(getPriceFeed(base, quote));  // CVL1
+    price, decimal = oracle.getFeedData(getPriceFeed(base, quote));  // CVL2
     return price;
 }
 
@@ -168,8 +170,10 @@ function matchMutualPrices(address base, address quote) returns bool {
     address feed2 = getPriceFeed(quote, base);
     uint256 price1; uint256 dec1;
     uint256 price2; uint256 dec2;
-    price1, dec1 = oracle._getFeedData(feed1);
-    price2, dec2 = oracle._getFeedData(feed2);
+    // price1, dec1 = oracle._getFeedData(feed1);  // CVL1
+    // price2, dec2 = oracle._getFeedData(feed2);  // CVL1
+    price1, dec1 = oracle.getFeedData(feed1);  // CVL2
+    price2, dec2 = oracle.getFeedData(feed2);  // CVL2
     return (require_uint256(price1 * price2) == oracle.pow10(require_uint256(dec1 + dec2)));
 }
 

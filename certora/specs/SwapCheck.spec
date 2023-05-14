@@ -69,7 +69,8 @@ methods {
     function feeCollector() external returns (address) envfree;
 
     // Price oracle & helpers
-    function oracle._getFeedData(address) external returns (uint256, uint256) envfree;
+    // function oracle._getFeedData(address) external returns (uint256, uint256) envfree;  // CVL1
+    function oracle._getFeedData(address) internal returns (uint256, uint256);  // CVL2
     function oracle.getFeedDecimals(address) external returns (uint256) envfree;
     function oracle.getERC20Decimals(address) external returns (uint256) envfree;
     function oracle.pow10(uint256) external returns (uint256) envfree;
@@ -244,4 +245,11 @@ rule swapConsistencyTokenOut(env e, env e2, method f) {
     uint256 balanceFCAfter = ERC20B.balanceOf(e, feeCollector());
 
     assert balanceInDexBefore + balanceInSmartWaltBefore + balanceFCBefore == balanceInDexAfter + balanceInSmartWaltAfter + balanceFCAfter;
+}
+
+rule sanity(method f) {
+    env e;
+    calldataarg args;
+    f(e, args);
+    assert false;
 }
