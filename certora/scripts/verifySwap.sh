@@ -27,7 +27,8 @@ certoraRun  certora/harness/SmartVaultHarnessSwap.sol \
 --loop_iter 2 \
 --optimistic_loop \
 $RULE  \
---rule_sanity basic \
 --settings -optimisticFallback=true,-contractRecursionLimit=1,-hashingLengthBound=10,-mediumTimeout=800 \
 --send_only \
 --msg "mimic Swap: $RULE $MSG"
+
+# --rule_sanity basic \

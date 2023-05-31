@@ -40,7 +40,7 @@ methods {
     ////////////////////////////////////////
     // SwapConnectorMock methods
     // packages/smart-vault/contracts/test/core/SwapConnectorMock.sol
-    function _.swap(uint8, address, address, uint256, uint256, bytes) external => DISPATCHER(true);
+    ////function _.swap(uint8, address, address, uint256, uint256, bytes) external => DISPATCHER(true);
 
     ////////////////////////////////////////
     // DexMock methods (called by SwapConnectorMock)
@@ -49,8 +49,8 @@ methods {
     // swap(address tokenIn, address tokenOut, uint256 amountIn, uint256, bytes memory)
     //     returns (uint256 amountOut)
 
-    function _.implementationOf(address) external => DISPATCHER(true);
-    function _.implementationData(address) external => DISPATCHER(true);
+    ////function _.implementationOf(address) external => DISPATCHER(true);
+    ////function _.implementationData(address) external => DISPATCHER(true);
     function ANY_ADDRESS() external returns (address) envfree;
     function isStrategyAllowed(address) external returns (bool) envfree;
     function investedValue(address) external returns (uint256) envfree;
