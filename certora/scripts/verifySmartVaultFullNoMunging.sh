@@ -1,5 +1,5 @@
-certoraRun  certora/harness/SmartVaultHarness.sol \
-            certora/harness/PriceOracleHarness.sol \
+certoraRun  certora/harness/SmartVaultHarnessNoMunging.sol \
+            certora/harness/PriceOracleHarnessNoMunging.sol \
             packages/smart-vault/contracts/test/samples/TokenMock.sol \
             packages/smart-vault/contracts/test/samples/WrappedNativeTokenMock.sol \
             packages/smart-vault/contracts/test/core/SwapConnectorMock.sol \
@@ -8,16 +8,22 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
             certora/harness/Aave/AaveV2Token.sol \
             certora/harness/Aave/incentivesControllerMock.sol:incentivesController \
             certora/harness/Aave/lendingPoolMock.sol:lendingPool \
+            packages/strategies/contracts/aave-v2/AaveV2Strategy.sol \
+            packages/bridge-connector/contracts/BridgeConnector.sol \
+            certora/harness/AggregatorV3Mock.sol \
 \
---verify SmartVaultHarness:certora/specs/SmartVault.spec \
+--verify SmartVaultHarnessNoMunging:certora/specs/SmartVaultNoMunging.spec \
 \
---link  SmartVaultHarness:wrappedNativeToken=WrappedNativeTokenMock \
-        SmartVaultHarness:priceOracle=PriceOracleHarness \
-        SmartVaultHarness:swapConnector=SwapConnectorMock \
-        SmartVaultHarness:Token=TokenMock \
-        SmartVaultHarness:aToken=AaveV2Token \
-        SmartVaultHarness:lendingPool=lendingPool \
-        SmartVaultHarness:incentivesController=incentivesController \
+--link  SmartVaultHarnessNoMunging:wrappedNativeToken=WrappedNativeTokenMock \
+        SmartVaultHarnessNoMunging:priceOracle=PriceOracleHarnessNoMunging \
+        SmartVaultHarnessNoMunging:swapConnector=SwapConnectorMock \
+        \
+        AaveV2Strategy:token=TokenMock \
+        AaveV2Strategy:aToken=AaveV2Token \
+        AaveV2Strategy:lendingPool=lendingPool \
+        AaveV2Strategy:incentivesController=incentivesController \
+        \
+        SmartVaultHarnessNoMunging:bridgeConnector=BridgeConnector \
         SwapConnectorMock:dex=DexMock \
         AaveV2Token:pool=lendingPool \
         AaveV2Token:incentivesController=incentivesController \
@@ -31,7 +37,7 @@ certoraRun  certora/harness/SmartVaultHarness.sol \
 --loop_iter 2 \
 --optimistic_loop \
 --settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=800 \
---msg "mimic SmartVaultFull script: sanity (no enableEventReporting)" \
+--msg "SmartVaultFull no-munging: AaveV2Strategy and bridge dispatcher AggregatorV3Interface and V3Mock decimals override" \
 --rule sanity
 # --rule onlyAuthUserCanCallFunctions \
 # --rule collectTransferIntegrity \
