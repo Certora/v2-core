@@ -36,8 +36,8 @@ certoraRun  certora/harness/SmartVaultHarnessNoMunging.sol \
 --staging \
 --loop_iter 2 \
 --optimistic_loop \
---settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=800 \
---msg "SmartVaultFull no-munging: AaveV2Strategy and bridge dispatcher AggregatorV3Interface and V3Mock decimals override" \
+--settings -optimisticFallback=true,-contractRecursionLimit=1,-mediumTimeout=800,-copyLoopUnroll=8 \
+--msg "SmartVaultFull no-munging: copyLoopUn 8, added AaveV2Strategy, bridge, AggregatorV3Mock, all dispatcher true" \
 --rule sanity
 # --rule onlyAuthUserCanCallFunctions \
 # --rule collectTransferIntegrity \
